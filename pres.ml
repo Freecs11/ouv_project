@@ -67,7 +67,9 @@ let rec printList (l : int64list) : unit =
 let rec constructList (x : big_int) : int64list =
   if eq_big_int x zero_big_int then { l = []; size = 0 }
   else
-    let y = int64_of_big_int (mod_big_int x (power_int_positive_int 2 64)) in
+    (* on récupère les 64 bits de poids faible *)
+    let y = int64_of_big_int (mod_big_int x (power_int_positive_int 2 64)) in 
+    (* on récupère les 64 bits de poids fort *)
     let z = div_big_int x (power_int_positive_int 2 64) in
     let l = constructList z in
     insertEndlist y l;
@@ -86,16 +88,15 @@ printList l
 Question 2   
 approche :  Transform chaque entier en sa représentation binare et on l'inverse pour avoir le résultat à la fin *)
  let decomposition (x : int list) : bool list =  
-  
   let rec decompose ( x:int list ) (aux : bool list) :bool list = 
     match x with
     | [] -> aux
     | h::t -> 
       let rec aux2 (x:int) (aux : bool list) : bool list = 
-        if x = 0 then aux
-        else aux2 (x/2) ((x mod 2 = 1)::aux)
+        if x = 0 then aux 
+        else aux2 (x/2) ((x mod 2 = 1)::aux)  (* on ajoute le bit de poids faible à la liste *)
       in
-      decompose t (aux2 h aux)
+      decompose t (aux2 h aux) (* on ajoute la représentation binaire de h à la liste et appel récurssivement sur le reste  *)
   in
   List.rev (decompose x [])
     ;;
@@ -184,16 +185,14 @@ let genAlea (n : int) : int64list =
     else
       let max_64 = Int64.shift_left 1L 64 in (* 2^64 *)
       if l.size * 64 < n then (* si on a pas encore atteint n bits *)
-        let rando = Int64.of_float (Random.float (Int64.to_float max_64)) in (* on génère un entier aléatoire sur 64 bits *)
+        let rando = Random.int64 max_64 in (* on génère un entier aléatoire sur 64 bits *)
         aux (n - 64) { l =  l.l @ [rando]; size = l.size + 1 } (* on ajoute cet entier à la liste et on continue *)
       else (* on a atteint n bits *)
         let bits_to_generate = n mod 64 in (* on calcule le nombre de bits à générer *)
-        let rando = Int64.of_float (Random.float (Int64.to_float (Int64.shift_left 1L bits_to_generate))) in (* on génère un entier aléatoire sur bits_to_generate bits *)
+        let rando = Random.int64 (Int64.shift_left 1L bits_to_generate) in (* on génère un entier aléatoire sur bits_to_generate bits *)
         aux (n - bits_to_generate) { l = l.l @ [rando]; size = l.size + 1 } (* on ajoute cet entier à la liste et on continue *)
   in 
   aux n { l = []; size = 0 }
-;;
-
 
 
 
@@ -201,4 +200,22 @@ let genAlea (n : int) : int64list =
 let k = genAlea 100;;
 print_string "\ngenAlea 100 = \n";;
 printList k;;
+
+(* big int from our int64list structure  *)
+let bigNumFromList ( l : int64list) : big_int = 
+  let rec aux (l : int64list) (auxi : big_int) : big_int = 
+    match l.l with
+    | [] -> auxi
+    | h::t ->  aux { l = t; size = l.size - 1 } (add_big_int (mult_int_big_int (Int64.to_int h) (power_int_positive_int 2 64)) auxi)
+  in
+  aux l zero_big_int
+    ;;
+
+(* test *)
+let k = constructList ( power_int_positive_int 2 100 );;
+let k = bigNumFromList k;;
+print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 100 ) ) = \n";;
+print_string (string_of_big_int k);;
+print_string "\n";;
+
 
