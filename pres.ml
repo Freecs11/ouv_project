@@ -201,15 +201,17 @@ let k = genAlea 100;;
 print_string "\ngenAlea 100 = \n";;
 printList k;;
 
-(* big int from our int64list structure  *)
+(* big int from our int64list structure 
+  Exemple : 2^164 = [0,0,2^36] => droite vers gauche : (2^(64*0))*0 + (2^(64*1))*0 + (2^(64*2))*2^36 = 2^164  
+*)
 let bigNumFromList ( l : int64list) : big_int = 
-  let rec aux (l : int64list) (auxi : big_int) : big_int = 
-    match l.l with
+  let rec aux ( l: int64 list) (auxi : big_int) (index : int) : big_int =
+    match l with
     | [] -> auxi
-    | h::t ->  aux { l = t; size = l.size - 1 } (add_big_int (mult_int_big_int (Int64.to_int h) (power_int_positive_int 2 64)) auxi)
+    | h::t -> aux t (add_big_int (mult_int_big_int (Int64.to_int h) (power_int_positive_int 2 (64*index))) auxi) (index+1)
   in
-  aux l zero_big_int
-    ;;
+  aux l.l zero_big_int 0
+;;
 
 (* test *)
 let k = constructList ( power_int_positive_int 2 100 );;
@@ -217,6 +219,14 @@ let k = bigNumFromList k;;
 print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 100 ) ) = \n";;
 print_string (string_of_big_int k);;
 print_string "\n";;
+let k = power_int_positive_int 2 164;;
+let dk = constructList k;;
+print_string "\npower_int_positive_int 2 164 = \n";;
+print_string (string_of_big_int k);;
+print_string " \n number after reconstructing from list  = \n";;
+print_string (string_of_big_int (bigNumFromList dk));;
+print_string "\n";;
+
 
 (* Section 2 : Arbre de décision*)
 
