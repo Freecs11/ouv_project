@@ -218,4 +218,82 @@ print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 1
 print_string (string_of_big_int k);;
 print_string "\n";;
 
+(* Section 2 : Arbre de décision*)
 
+(* Définir une structure de données permettant d’encoder des arbres binaires de décision.
+Il s’agit d’une structure de données arborescente dont les nœuds internes contiennent un 
+entier égal à sa profondeur;
+chaque nœud interne possède deux enfants qui sont des arbres de décision et les feuilles
+contiennent un booléen, true ou false. *)
+
+type decisionTree = 
+  | Leaf of bool
+  | Node of int * decisionTree * decisionTree
+;;
+
+(* une petite fonction pour divisé une liste de 'a type à la case n en 2 listes*)
+let rec split_list_at_n (l : 'a list) (n : int) : 'a list * 'a list =
+  match l with
+  | [] -> ([], [])
+  | h :: t ->
+    if n = 0 then ([], l)
+    else
+      let (l1, l2) = split_list_at_n t (n - 1) in
+      (h :: l1, l2)
+
+(* Étant donné une table de vérité, écrire une fonction cons_arbre qui construit l’arbre
+de décision associé à la table de vérité T. Il s’agit d’un arbre binaire totalement équilibré, dont les
+nœuds internes ont pour étiquette la valeur de leur profondeur et les feuilles sont étiquetées (via le
+parcours préfixe) avec les éléments de T *)
+
+let cons_arbre (t : bool list) : decisionTree =
+  match t with
+  | [] -> raise (Failure "Empty list")
+  | [h] -> Leaf h
+  | _ -> 
+    let rec aux_cons (t : bool list) (n : int) : decisionTree = 
+      match t with
+      | [] -> raise (Failure "Empty list")
+      | [h] -> Leaf h
+      | _ -> 
+        let l = List.length t in
+        let l1 , l2 = split_list_at_n t (l/2) in
+        Node (n, aux_cons l1 (n+1), aux_cons l2 (n+1))
+    in
+    aux_cons t 1
+;;
+
+let rec printTree (t : decisionTree) (indent : string) : unit = 
+  match t with
+  | Leaf b -> print_string (indent ^ "└─ " ^ string_of_bool b ^ "\n")
+  | Node (n, t1, t2) -> 
+    print_string (indent ^ "├─ " ^ "Depth " ^ string_of_int n ^ "\n");
+    printTree t1 (indent ^ "│  ");
+    printTree t2 (indent ^ "│  ")
+;;
+
+(* test  with a list representing big integer : 25899 *)
+let k = table 25899 16;;
+print_string "\ntable 25899 64 = \n";;
+printboolList k;;
+let k = cons_arbre k;;
+print_string "\ncons_arbre ( table 25899 64 ) = \n";;
+printTree k "";;
+
+
+(* Étant donné un nœud N de l’arbre (interne ou feuille), écrire une fonction, nommée
+liste_feuilles et qui construit la liste des étiquettes des feuilles du sous-arbre enraciné en N, liste
+ordonnée de la feuille la plus à gauche jusqu’à celle la plus à droite. *)
+let rec liste_feuilles (t : decisionTree) : bool list = 
+  match t with
+  | Leaf b -> [b]
+  | Node (n, t1, t2) -> liste_feuilles t1 @ liste_feuilles t2
+;;
+(* test *)
+let k = table 25899 16;;
+let kd = cons_arbre k;;
+let kf = liste_feuilles kd;;
+print_string "\nliste_feuilles ( cons_arbre ( table 25899 64 ) ) = \n";;
+printboolList kf;;
+
+(* Section 3 : Compression de l’arbre de décision et ZDD *)
