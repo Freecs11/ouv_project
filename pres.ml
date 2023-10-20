@@ -399,7 +399,7 @@ let apply_compression (dectree : decisionTree) :decisionTree =
       let l1 = liste_feuilles t1 in (* liste feuille  M  *)
       let l2 = liste_feuilles t2 in (* liste feuille  N  *)
       (* TODO *)
-      in
-      aux2 l
+      
+      
   in
   aux dectree {l=[]; size=0}
