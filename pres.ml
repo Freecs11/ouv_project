@@ -83,26 +83,27 @@ let l = constructList test in
 printList l
 
 
+(* helper function to convert an int64 to its binary representation *)
+let rec int64toBoolList (x : int64) (aux : bool list) : bool list =
+  if x = 0L then aux
+  else int64toBoolList (Int64.div x 2L) ((Int64.rem x 2L = 1L) :: aux) (* int version :  intToBool (x/2) (x mod 2 = 1 :: aux) *)
+;;
 
 (*
 Question 2   
 approche :  Transform chaque entier en sa représentation binare et on l'inverse pour avoir le résultat à la fin *)
- let decomposition (x : int list) : bool list =  
-  let rec decompose ( x:int list ) (aux : bool list) :bool list = 
+ let decomposition (x : int64list) : bool list =  
+  let rec decompose ( x:int64 list ) (aux : bool list) :bool list = 
     match x with
     | [] -> aux
-    | h::t -> 
-      let rec aux2 (x:int) (aux : bool list) : bool list = 
-        if x = 0 then aux 
-        else aux2 (x/2) ((x mod 2 = 1)::aux)  (* on ajoute le bit de poids faible à la liste *)
-      in
-      decompose t (aux2 h aux) (* on ajoute la représentation binaire de h à la liste et appel récurssivement sur le reste  *)
+    | h::t -> decompose t (int64toBoolList h aux)
   in
-  List.rev (decompose x [])
+  List.rev (decompose x.l [])
     ;;
 
 (* test *)
-let k = decomposition([38;38]);;
+let nb : int64list = { l = [38L]; size = 1 };;
+let k = decomposition nb;;
 print_string "\ndecomposition([38]) = \n";;
 for i = 0 to (List.length k) - 1 do
   print_string (string_of_bool (List.nth k i)); print_string " ";
@@ -112,7 +113,7 @@ print_string "\n";;
 
 (* Question 3 *)
 
-let completion x  nb  : bool list = 
+let completion (x:bool list)  (nb : int)  : bool list = 
   if nb < List.length x then
     let rec aux x nb auxx : bool list = 
       match x with
@@ -152,33 +153,38 @@ printboolList k;;
 (* Question 4 *)
 
 (* approche : 1 + 2 * boolListToInt t  puisque on représente les bits de poids fort à gauche *)
-let rec boolListToInt (x : bool list) : int = 
+let rec boolListToInt64 (x : bool list) : int64 = 
   match x with
-  | [] -> 0
-  | h::t -> if h then 1 + 2 * boolListToInt t
-    else 0 + 2 * boolListToInt t
+  | [] -> Int64.zero
+  | h::t -> if h then Int64.add 1L (Int64.mul 2L (boolListToInt64 t))
+    else Int64.mul 2L (boolListToInt64 t)
     ;;
 
 (* test *)
-let k = boolListToInt [false; true; true; false; false; true];;
+let k = boolListToInt64 [false; true; true; false; false; true];;
 print_string "\nboolListToInt([false; true; true; false; false; true]) = \n";;
-print_int k;;
+print_string (Int64.to_string k);;
 print_string "\n";;
 
 (* Question 5 *)
 
-(* approche : on applique decomposition puis completion *)
-let table (x : int) (n : int) : bool list = 
-  completion (decomposition [x]) n
+(* approche : on applique decomposition puis completion
+    x: entier à transformer en bool list
+    n: nombre de bits de la liste de sortie
+*)
+let table (x : int64list) (n : int) : bool list = 
+  completion (decomposition  x) n
     ;;
 
 (* test *)
-let k = table 38 8;;
+let k = table { l=[38L] ; size=1}  8;;
 print_string "\ntable 38 8 = \n";;
 printboolList k;;
 
 (* Question 6 *)
-
+(*
+  n = nombre de bits de l'eniter à générer
+ *)
 let genAlea (n : int) : int64list =
   let rec aux (n : int) (l : int64list) =
     if n <= 0 then l
@@ -218,6 +224,9 @@ let k = constructList ( power_int_positive_int 2 100 );;
 let k = bigNumFromList k;;
 print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 100 ) ) = \n";;
 print_string (string_of_big_int k);;
+print_string "\n";;
+print_string "power_int_positive_int 2 100 = \n";;
+print_string ( string_of_big_int ( power_int_positive_int 2 100 ) );;
 print_string "\n";;
 let k = power_int_positive_int 2 164;;
 let dk = constructList k;;
@@ -283,7 +292,7 @@ let rec printTree (t : decisionTree) (indent : string) : unit =
 ;;
 
 (* test  with a list representing big integer : 25899 *)
-let k = table 25899 16;;
+let k = table {l=[25899L] ; size=1} 16;;
 print_string "\ntable 25899 64 = \n";;
 printboolList k;;
 let k = cons_arbre k;;
@@ -300,10 +309,97 @@ let rec liste_feuilles (t : decisionTree) : bool list =
   | Node (n, t1, t2) -> liste_feuilles t1 @ liste_feuilles t2
 ;;
 (* test *)
-let k = table 25899 16;;
+let k = table {l=[25899L] ; size=1} 16;;
 let kd = cons_arbre k;;
 let kf = liste_feuilles kd;;
 print_string "\nliste_feuilles ( cons_arbre ( table 25899 64 ) ) = \n";;
 printboolList kf;;
 
 (* Section 3 : Compression de l’arbre de décision et ZDD *)
+
+type listeDejaVus = { mutable l : (int64list * decisionTree) list; mutable size : int }
+
+let insertEndlistDV (x : int64list) (y : decisionTree) (l : listeDejaVus) : unit =
+  l.l <- (x, y) :: l.l;
+  l.size <- l.size + 1
+;;
+
+let getHeadlistDV (l : listeDejaVus) : (int64list * decisionTree) =
+  match l.l with
+  | [] -> raise (Failure "Empty list")
+  | h :: _ -> h
+;;
+
+let removeHeadlistDV (l : listeDejaVus) : unit =
+  match l.l with
+  | [] -> raise (Failure "Empty list")
+  | _ :: t -> l.l <- t; l.size <- l.size - 1
+;;
+
+let rec printListDV (l : listeDejaVus) : unit =
+  match l.l with
+  | [] -> print_string "\n"
+  | (x, y) :: t ->
+    print_string "  ";
+    printList x;
+    print_string " -> ";
+    printTree y "";
+    printListDV { l = t; size = l.size - 1 }
+;;
+
+let rec boolListEq (l1:bool list) (l2:bool list) : bool =
+  match l1, l2 with
+  | [], [] -> true
+  | [], _ -> false
+  | _, [] -> false
+  | h1::t1, h2::t2 -> if h1 = h2 then boolListEq t1 t2 else false
+
+(* 
+— règle-M : Si deux nœuds M et N sont les racines de sous-arbres ayant le même résultat pour
+liste_feuilles, alors les arêtes pointant vers N sont remplacées par des arêtes pointant vers
+M dans toute la structure ; puis le nœud N est supprimé de la structure.
+— règle-Z : si l’enfant droit de N pointe vers f alse, alors toutes les arêtes pointant vers N sont
+remplacées par des arêtes pointant vers l’enfant gauche de N ; puis le nœud N est supprimé de
+la structure.
+Après avoir utilisé ces règles aussi longtemps que possible l’arbre de décision de départ est compressé
+en le graphe ZDD lui correspondant.
+Ces règles sont confluentes. On peut les appliquer dans l’ordre que l’on souhaite et sur les nœuds
+que l’on souhaite, on obtiendra à terme toujours la même structure compressée : l’unique ZDD.
+Pour la suite, les nœuds d’un arbre pourront être utilisés pour être des nœuds d’un graphe, puisque
+les ZDD sont des graphes.
+
+3.1 Compression avec historique stocké dans une liste
+Question 3.10 Définir une structure de données permettant d’encoder une liste, nommée ListeDejaVus
+par la suite, dont les éléments sont des couples avec la première composante étant un grand entier (i.
+e. une liste d’entiers), et la seconde composante un pointeur vers un nœud d’un graphe.
+Voilà l’algorithme élémentaire de compression d’un arbre de décision.
+— Soit G l’arbre de décision qui sera compressé petit à petit. Soit une liste ListeDejaVus vide.
+— En parcourant G via un parcours suffixe, étant donné N le nœud en cours de visite :
+— Calculer le grand entier n correspondant à la liste des feuilles du sous-arbre enraciné en N ;
+— Si n est la première composante d’un couple stocké dans ListeDejaVus, alors remplacer le
+pointeur vers N (depuis son parent) par un pointeur vers la seconde composante du couple en
+question ;
+— Sinon ajouter en tête de ListeDejaVus un couple constitué du grand entier n et d’un pointeur
+vers N 
+
+*)
+
+(*
+  applique la règle M et Z sur un arbre de décision
+  @param dectree l'arbre de décision
+  @param l la liste de déjà vus
+  @return l'arbre de décision après application de la règle M 
+*)
+let apply_compression (dectree : decisionTree) :decisionTree = 
+  (* parcours suffixe*)
+  let rec aux (dectree : decisionTree) (l : listeDejaVus) : decisionTree = 
+    match dectree with
+    | Leaf b -> dectree
+    | Node (n, t1, t2) -> 
+      let l1 = liste_feuilles t1 in (* liste feuille  M  *)
+      let l2 = liste_feuilles t2 in (* liste feuille  N  *)
+      (* TODO *)
+      in
+      aux2 l
+  in
+  aux dectree {l=[]; size=0}
