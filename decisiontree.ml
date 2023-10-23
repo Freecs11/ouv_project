@@ -75,21 +75,6 @@ let kf = liste_feuilles kd;;
 print_string "\nliste_feuilles ( cons_arbre ( table 25899 64 ) ) = \n";;
 printboolList kf;;
 
-(*
-Définir une structure de données permettant d’encoder une liste, nommée ListeDejaVus
-par la suite, dont les éléments sont des couples avec la première composante étant un grand entier (i.
-e. une liste d’entiers), et la seconde composante un pointeur vers un nœud d’un graphe.
-Voilà l’algorithme élémentaire de compression d’un arbre de décision.
-— Soit G l’arbre de décision qui sera compressé petit à petit. Soit une liste ListeDejaVus vide.
-— En parcourant G via un parcours suffixe, étant donné N le nœud en cours de visite :
-— Calculer le grand entier n correspondant à la liste des feuilles du sous-arbre enraciné en N ;
-— Si n est la première composante d’un couple stocké dans ListeDejaVus, alors remplacer le
-pointeur vers N (depuis son parent) par un pointeur vers la seconde composante du couple en
-question ;
-— Sinon ajouter en tête de ListeDejaVus un couple constitué du grand entier n et d’un pointeur
-vers N.   
-*)
-
 let calculateInt64list (l:bool list) : int64list = 
   (* we have a boolListtoInt that converts a bool list to an int64 
    so maybe we can use to convert a bool list of size 64 to an int64 and add it to our int64list *)   
@@ -148,26 +133,86 @@ let checkint64listsEq (l1:int64list) (l2 : int64list) :bool =
   aux l1.l l2.l
  ;;
 
-    
+(*
+Définir une structure de données permettant d’encoder une liste, nommée ListeDejaVus
+par la suite, dont les éléments sont des couples avec la première composante étant un grand entier (i.
+e. une liste d’entiers), et la seconde composante un pointeur vers un nœud d’un graphe.
+Voilà l’algorithme élémentaire de compression d’un arbre de décision.
+— Soit G l’arbre de décision qui sera compressé petit à petit. Soit une liste ListeDejaVus vide.
+— En parcourant G via un parcours suffixe, étant donné N le nœud en cours de visite :
+— Calculer le grand entier n correspondant à la liste des feuilles du sous-arbre enraciné en N ;
+— Si n est la première composante d’un couple stocké dans ListeDejaVus, alors remplacer le
+pointeur vers N (depuis son parent) par un pointeur vers la seconde composante du couple en
+question ;
+— Sinon ajouter en tête de ListeDejaVus un couple constitué du grand entier n et d’un pointeur
+vers N.   
+*)
+
+(*— règle-M : Si deux nœuds M et N sont les racines de sous-arbres ayant le même résultat pour
+liste_feuilles, alors les arêtes pointant vers N sont remplacées par des arêtes pointant vers
+M dans toute la structure ; puis le nœud N est supprimé de la structure.
+*)
+let rec applyRuleM (tree : decisionTree) (l : listeDejaVus) : decisionTree =
+  let rec applyRuleMHelper (t : decisionTree) (l : listeDejaVus) : decisionTree =
+    match t with
+    | Leaf _ -> t
+    | Node (a, t1, t2) ->
+      let l1 = liste_feuilles t1 in
+      let l2 = liste_feuilles t2 in
+      let l1c = calculateInt64list l1 in
+      let l2c = calculateInt64list l2 in
+      if(checkint64listsEq (l1c) (l2c)) then
+        let compressedT1 = applyRuleMHelper t1 l in
+        insertEndListeDejaVus l2c t2 l;
+        Node (a, compressedT1, t2)
+      else
+        let compressedT1 = applyRuleMHelper t1 l in
+        let compressedT2 = applyRuleMHelper t2 l in
+        insertEndListeDejaVus l2c t2 l;
+        insertEndListeDejaVus l1c t1 l; 
+        Node (a, compressedT1, compressedT2)
+  in
+  applyRuleMHelper tree l
+;;
+
+(*règle-Z : si l’enfant droit de N pointe vers f alse, alors toutes les arêtes pointant vers N sont
+remplacées par des arêtes pointant vers l’enfant gauche de N ; puis le nœud N est supprimé de
+la structure*)
+let rec applyRuleZ (tree : decisionTree) (l : listeDejaVus) (parent : decisionTree) : decisionTree =
+  match tree with
+  | Leaf _ -> tree
+  | Node (a, t1, t2) ->
+    match t2 with
+    | Leaf false ->
+      let compressedT1 = applyRuleZ t1 l parent in
+      compressedT1
+    | _ ->
+      let compressedT1 = applyRuleZ t1 l parent in
+      let compressedT2 = applyRuleZ t2 l parent in
+      Node (a, compressedT1, compressedT2)
+;;  
+
 let compressionParListe (decTree : decisionTree) (l : listeDejaVus) : decisionTree =
-  let rec aux (decTree : decisionTree) (l : listeDejaVus) : decisionTree =
-    match decTree with
-     | Leaf b -> Leaf b
-     | Node (n, t1, t2) ->
-        let l1 = liste_feuilles t1 in
-        let l2 = liste_feuilles t2 in
-        let l1 = calculateInt64list l1 in
-        let l2 = calculateInt64list l2 in
-        (* if( checkint64listsEq l1 l2 ) then  *)
-         (**)
-        Node (n,t1 , t2)
-  in aux decTree l 
+  let rec compression (current : decisionTree) : decisionTree =
+    match current with
+    | Leaf b -> Leaf b
+    | Node (a, t1, t2) ->
+      (* Apply the "M" and "Z" rules in any order *)
+      let compressedT1 = applyRuleM t1 l in
+      let compressedT2 = applyRuleM t2 l in
+      let compressedT1 = applyRuleZ compressedT1 l current in
+      let compressedT2 = applyRuleZ compressedT2 l current in
+      Node (a, compressedT1, compressedT2)
+  in
+  compression decTree
 ;;
 
 (* test *)
 let k = table {l=[25899L] ; size=1} 16;;
 let kd = cons_arbre k;;
-let k = compressionParListe kd {l=[]};;
+print_string "\ncons_arbre ( table 25899 64 ) = \n";;
+printTree kd "" ;;
+let k = compressionParListe kd  {l=[]};;
 print_string "\ncompression ( cons_arbre ( table 25899 64 ) ) = \n";;
 printTree k "";;
 ;;
@@ -188,26 +233,26 @@ let get_next_id () =
   next_id := current_id + 1;
   current_id
 
-let rec dot (t : decisionTree) : string * node_info =
-  match t with
-  | Leaf b ->
-    let node_id = get_next_id () in
-    let node = { label = if b then "True" else "False"; shape = "Msquare"; style = None; id = node_id } in
-    let dot_string = Printf.sprintf "n%d [label=\"%s\", shape=%s];\n" node_id node.label node.shape in
-    (dot_string, node)
-  | Node (n, left, right) ->
-    let node_id = get_next_id () in
-    let node = { label = string_of_int n; shape = "Mdiamond"; style = None; id = node_id } in
-    let dot_string = Printf.sprintf "n%d [label=\"%s\", shape=%s];\n" node_id node.label node.shape in
-    let (left_dot, left_node) = dot left in
-    let (right_dot, right_node) = dot right in
-    let edge_left = Printf.sprintf "n%d -> n%d;\n" node_id left_node.id in
-    let edge_right = Printf.sprintf "n%d -> n%d [style=dotted];\n" node_id right_node.id in
-    (dot_string ^ left_dot ^ right_dot ^ edge_left ^ edge_right, node)
-
+  let rec dot (t : decisionTree) : string * node_info =
+    match t with
+    | Leaf b ->
+      let node_id = get_next_id () in
+      let node = { label = if b then "True" else "False"; shape = "Msquare"; style = None; id = node_id } in
+      let dot_string = Printf.sprintf "n%d [label=\"%s\", shape=%s];\n" node_id node.label node.shape in
+      (dot_string, node)
+    | Node (a, left, right) ->
+      let (left_dot, left_node) = dot left in
+      let (right_dot, right_node) = dot right in
+      let node_id = get_next_id () in
+      let node = { label = string_of_int a; shape = "Mdiamond"; style = None; id = node_id } in
+      let dot_string = Printf.sprintf "n%d [label=\"%s\", shape=%s];\n" node_id node.label node.shape in
+      dot_string ^ left_dot ^ right_dot ^ 
+      Printf.sprintf "n%d -> n%d;\n" node_id left_node.id ^ 
+      Printf.sprintf "n%d -> n%d [style=dotted];\n" node_id right_node.id, node
+  
 let generate_dot_file (t : decisionTree) (filename : string) : unit =
   next_id := 0;
-  let dot_content, _ = dot t in
+  let dot_content, _  = dot t  in
   let dot_string = Printf.sprintf "digraph G {\n%s}\n" dot_content in
   let oc = open_out filename in
   Printf.fprintf oc "%s" dot_string;
