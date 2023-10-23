@@ -68,10 +68,10 @@ let rec constructList (x : big_int) : int64list =
   else
     (* on récupère les 64 bits de poids faible *)
     let y = int64_of_big_int (mod_big_int x (power_int_positive_int 2 64)) in 
-    (* on récupère les 64 bits de poids fort *)
+    (* on divise par 2^64 pour récupérer les 64 bits de poids fort *)
     let z = div_big_int x (power_int_positive_int 2 64) in
     let l = constructList z in
-    insertEndlist y l;
+    insertEndlist y l ;
     l
   ;;
 
@@ -79,7 +79,13 @@ let rec constructList (x : big_int) : int64list =
 (* test *)
 let test = power_int_positive_int 2 100 in
 let l = constructList test in
-printList l
+printList l ;; 
+
+let test = power_int_positive_int 2 300 in
+let l = constructList test in
+printList l ;;
+
+
 
 
 (* helper function to convert an int64 to its binary representation *)
@@ -194,27 +200,7 @@ let k = composition [false; true; true; false; false; true];;
 print_string "\ncomposition([false; true; true; false; false; true]) = \n";;
 printList k;;
 
-(*new test*)
-let k = composition  [false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true];;
-print_string "\ncomposition([false; false; false; false; false; false; false; false; false; false; false;... = \n";;
-print_string " { " ;;
-printList k;;
+
 
 
 
@@ -299,4 +285,52 @@ print_string (string_of_big_int k);;
 print_string "\n";;
 print_string "power_int_positive_int 2 300 = \n";;
 print_string ( string_of_big_int ( power_int_positive_int 2 300 ) );;
+print_string "\n";;
+
+
+(*new test*)
+let k = composition  [false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true];;
+print_string "\ncomposition([false; false; false; false; false; false; false; false; false; false; false;... = \n";;
+print_string " { " ;;
+printList k;;
+let r = bigNumFromList k;;
+print_string "\n and it's big num :";;
+print_string (string_of_big_int r);;
+
+let x = decomposition ( constructList (power_int_positive_int 2 300) );;
+let x = composition x;;
+let r = bigNumFromList x;;
+print_string "\ncomposition(decomposition(2^300)) = \n";;
+print_string " { " ;;
+printList x;;
+print_string "\n";;
+
+print_string "\n and it's big num :";;
+print_string (string_of_big_int r);;
+print_string "\n";;
+
+
+let test = power_int_positive_int 2 300 ;;
+let l = constructList test ;;
+let k = bigNumFromList l ;;
+print_string "\nconstructList ( power_int_positive_int 2 300 ) = \n";;
+printList l ;;
+print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 300 ) ) = \n";;
+print_string (string_of_big_int k);;
 print_string "\n";;
