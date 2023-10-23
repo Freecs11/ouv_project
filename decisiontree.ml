@@ -19,15 +19,6 @@ type decisionTree =
   | Node of int * decisionTree * decisionTree
 ;;
 
-(* une petite fonction pour divisé une liste de 'a type à la case n en 2 listes*)
-let rec split_list_at_n (l : 'a list) (n : int) : 'a list * 'a list =
-  match l with
-  | [] -> ([], [])
-  | h :: t ->
-    if n = 0 then ([], l)
-    else
-      let (l1, l2) = split_list_at_n t (n - 1) in
-      (h :: l1, l2)
 
 (* Étant donné une table de vérité, écrire une fonction cons_arbre qui construit l’arbre
 de décision associé à la table de vérité T. Il s’agit d’un arbre binaire totalement équilibré, dont les

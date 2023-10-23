@@ -49,10 +49,10 @@ let removeHeadlist (l : int64list) : unit =
 *)
 let rec printList (l : int64list) : unit =
   match l.l with
-  | [] -> print_string "\n"
+  | [] -> print_string " } \n"
   | h :: t ->
     print_string "  ";
-    print_string (Int64.to_string h);
+    print_string (Int64.to_string h );
     printList { l = t; size = l.size - 1 }
   ;;
 
@@ -165,6 +165,61 @@ print_string "\nboolListToInt([false; true; true; false; false; true]) = \n";;
 print_string (Int64.to_string k);;
 print_string "\n";;
 
+(* une petite fonction pour divisé une liste de 'a type à la case n en 2 listes*)
+let rec split_list_at_n (l : 'a list) (n : int) : 'a list * 'a list =
+  match l with
+  | [] -> ([], [])
+  | h :: t ->
+    if n = 0 then ([], l)
+    else
+      let (l1, l2) = split_list_at_n t (n - 1) in
+      (h :: l1, l2)
+    ;;
+
+let composition (l: bool list) : int64list =
+  (* use boolListToInt64 *)
+  let listof64 = ref (split_list_at_n l 64 )  in (* (list de 64 elements * reste de la liste donc il faut refaire split sur le reste également) *)
+  let rec aux ( le : bool list * bool list) (auxi : int64list) : int64list = 
+    match le with
+    | ([],[]) -> auxi
+    | (h,[]) ->  { l = auxi.l @ [boolListToInt64 h] ; size = auxi.size + 1 } 
+    | (h, t) ->  let newlist = ref(split_list_at_n t 64) in (* on split le reste de la liste *)
+      aux (!newlist) { l = auxi.l @ [boolListToInt64 h] ; size = auxi.size + 1 }
+  in
+  aux !listof64 { l = []; size = 0 }
+;;
+
+(* test *)
+let k = composition [false; true; true; false; false; true];;
+print_string "\ncomposition([false; true; true; false; false; true]) = \n";;
+printList k;;
+
+(*new test*)
+let k = composition  [false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; false; false; false; false;
+false; false; false; false; false; false; false; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true; true;
+true; true; true; true; true; true; true; true; true; true; true];;
+print_string "\ncomposition([false; false; false; false; false; false; false; false; false; false; false;... = \n";;
+print_string " { " ;;
+printList k;;
+
+
+
+
+
 (* Question 5 *)
 
 (* approche : on applique decomposition puis completion
@@ -235,3 +290,13 @@ print_string " \n number after reconstructing from list  = \n";;
 print_string (string_of_big_int (bigNumFromList dk));;
 print_string "\n";;
 
+let f=  constructList (power_int_positive_int 2 300);; 
+print_string "\ncomposition(decomposition(2^300)) = \n";;
+printList f;;
+let k = bigNumFromList f;;
+print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 300 ) ) = \n";;
+print_string (string_of_big_int k);;
+print_string "\n";;
+print_string "power_int_positive_int 2 300 = \n";;
+print_string ( string_of_big_int ( power_int_positive_int 2 300 ) );;
+print_string "\n";;
