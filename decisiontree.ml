@@ -74,7 +74,7 @@ printboolList kf;;
 
 let calculateInt64list (l:bool list) : int64list = 
   (* we have a boolListtoInt that converts a bool list to an int64 
-   so maybe we can use to convert a bool list of size 64 to an int64 and add it to our int64list *)   
+   so we can use it to convert a bool list of size 64 to an int64 and add it to our int64list *)   
   let rec aux (l:bool list) (auxi:int64list) : int64list = 
     if List.length l <= 64 then 
       let k = boolListToInt64 l in
