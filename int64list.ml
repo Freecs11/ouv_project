@@ -16,7 +16,7 @@ type int64list = { mutable l : int64 list; mutable size : int }
   @param l The list to insert into.
 *)
 let insertEndlist (x : int64) (l : int64list) : unit =
-  l.l <- x :: l.l;
+  l.l <- l.l@[x];
   l.size <- l.size + 1
 ;;
 
