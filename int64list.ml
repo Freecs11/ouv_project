@@ -68,7 +68,6 @@ let rec printList (l : int64list) : unit =
   @return The list of 64-bit integers.
 *)
 let rec constructList (power:int) :int64list =
-  let base = Int64.shift_left 1L 64 in
   let rec constructList' (n : int) (acc : int64list) =
     if n <= 64 then (
       insertEndlist (Int64.shift_left 1L n) acc;
@@ -223,6 +222,29 @@ let k = table { l=[38L] ; size=1}  8;;
 print_string "\ntable 38 8 = \n";;
 printboolList k;;
 
+(*test sur 25899*)
+let k = decomposition { l=[25899L] ; size=1}  ;;
+print_string "\ndecomposition 25899 = \n";;
+printboolList k;;
+print_string "composition(decomposition(25899)) = \n";;
+let k = composition k;;
+printList k;;
+print_string "\n";;
+print_string "int64toBoolList 25899 = \n";;
+let k = int64toBoolList 25899L [];;
+printboolList k;;
+print_string "\n";;
+
+(* 1101 0100 1010 0110
+1100 1010 0101 011 *)
+
+(*test sur 25899*)
+let k = table { l=[25899L] ; size=1} 16;;
+print_string "\ntable 25899 64 = \n";;
+printboolList k;;
+print_string "\n";;
+
+
 (* Question 6 *)
 (*
   n = nombre de bits de l'eniter à générer
@@ -241,7 +263,7 @@ let genAlea (n : int) : int64list =
         aux (n - bits_to_generate) { l = l.l @ [rando]; size = l.size + 1 } (* on ajoute cet entier à la liste et on continue *)
   in 
   aux n { l = []; size = 0 }
-
+;;
 
 
 (* test *)
