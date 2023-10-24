@@ -1,7 +1,4 @@
-#use "topfind";;
-#require "num";;
-open Num;;
-open Big_int;;
+
 open Random;;
 (*
 1 - Presentation 
@@ -57,35 +54,34 @@ let rec printList (l : int64list) : unit =
   ;;
 
 (*
-  Constructs a list of 64-bit integers from the given big_int.
-  uses the big_int library to do the conversions and calculations ( remainder (mod), division (div)))
-  https://v2.ocaml.org/releases/4.04/htmlman/libref/Big_int.html
-  @param x The big_int to construct the list from.
+  Constructs a list of 64-bit integers representing the powers of 2 from 0 to the given power.
   @return The list of 64-bit integers.
 *)
-let rec constructList (x : big_int) : int64list =
-  if eq_big_int x zero_big_int then { l = []; size = 0 }
-  else
-    (* on récupère les 64 bits de poids faible *)
-    let y = int64_of_big_int (mod_big_int x (power_int_positive_int 2 64)) in 
-    (* on divise par 2^64 pour récupérer les 64 bits de poids fort *)
-    let z = div_big_int x (power_int_positive_int 2 64) in
-    let l = constructList z in
-    insertEndlist y l ;
-    l
-  ;;
+let rec constructList (power : int) : int64list =
+  let base = Int64.shift_left 1L 64 in
+  let rec constructList' (n : int) (acc : int64list) =
+    if n <= 64 then (
+      insertEndlist (Int64.shift_left 1L n) acc;
+      acc
+    )
+    else (
+      let y = if n >= 64 then 0L else Int64.shift_left 1L (n - 64) in
+      let z = n - 64 in
+      let new_acc = constructList' z acc in  (* Recursive call first *)
+      insertEndlist y new_acc;  (* Then insert y *)
+      new_acc
+    )
+  in
+  constructList' power { l = []; size = 0 }
+;;
 
 
-(* test *)
-let test = power_int_positive_int 2 100 in
-let l = constructList test in
+  (* test *)
+let l = constructList 100 in
 printList l ;; 
 
-let test = power_int_positive_int 2 300 in
-let l = constructList test in
+let l = constructList 300 in
 printList l ;;
-
-
 
 
 (* helper function to convert an int64 to its binary representation *)
@@ -203,9 +199,6 @@ printList k;;
 
 
 
-
-
-
 (* Question 5 *)
 
 (* approche : on applique decomposition puis completion
@@ -247,44 +240,18 @@ let k = genAlea 100;;
 print_string "\ngenAlea 100 = \n";;
 printList k;;
 
-(* big int from our int64list structure 
-  Exemple : 2^164 = [0,0,2^36] => droite vers gauche : (2^(64*0))*0 + (2^(64*1))*0 + (2^(64*2))*2^36 = 2^164  
-*)
-let bigNumFromList ( l : int64list) : big_int = 
-  let rec aux ( l: int64 list) (auxi : big_int) (index : int) : big_int =
-    match l with
-    | [] -> auxi
-    | h::t -> aux t (add_big_int (mult_int_big_int (Int64.to_int h) (power_int_positive_int 2 (64*index))) auxi) (index+1)
-  in
-  aux l.l zero_big_int 0
-;;
 
-(* test *)
-let k = constructList ( power_int_positive_int 2 100 );;
-let k = bigNumFromList k;;
-print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 100 ) ) = \n";;
-print_string (string_of_big_int k);;
-print_string "\n";;
-print_string "power_int_positive_int 2 100 = \n";;
-print_string ( string_of_big_int ( power_int_positive_int 2 100 ) );;
-print_string "\n";;
-let k = power_int_positive_int 2 164;;
-let dk = constructList k;;
-print_string "\npower_int_positive_int 2 164 = \n";;
-print_string (string_of_big_int k);;
-print_string " \n number after reconstructing from list  = \n";;
-print_string (string_of_big_int (bigNumFromList dk));;
+
+let f2 = constructList 164;;
+print_string "constructList 164 = \n";;
+printList f2;;
 print_string "\n";;
 
-let f=  constructList (power_int_positive_int 2 300);; 
-print_string "\ncomposition(decomposition(2^300)) = \n";;
-printList f;;
-let k = bigNumFromList f;;
-print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 300 ) ) = \n";;
-print_string (string_of_big_int k);;
-print_string "\n";;
-print_string "power_int_positive_int 2 300 = \n";;
-print_string ( string_of_big_int ( power_int_positive_int 2 300 ) );;
+
+
+let f2 = constructList 300;;
+print_string "\nconstructList 300 = \n";;
+printList f2;;
 print_string "\n";;
 
 
@@ -309,28 +276,11 @@ true; true; true; true; true; true; true; true; true; true; true];;
 print_string "\ncomposition([false; false; false; false; false; false; false; false; false; false; false;... = \n";;
 print_string " { " ;;
 printList k;;
-let r = bigNumFromList k;;
-print_string "\n and it's big num :";;
-print_string (string_of_big_int r);;
 
-let x = decomposition ( constructList (power_int_positive_int 2 300) );;
+
+let x = decomposition ( constructList (300) );;
 let x = composition x;;
-let r = bigNumFromList x;;
 print_string "\ncomposition(decomposition(2^300)) = \n";;
 print_string " { " ;;
 printList x;;
-print_string "\n";;
-
-print_string "\n and it's big num :";;
-print_string (string_of_big_int r);;
-print_string "\n";;
-
-
-let test = power_int_positive_int 2 300 ;;
-let l = constructList test ;;
-let k = bigNumFromList l ;;
-print_string "\nconstructList ( power_int_positive_int 2 300 ) = \n";;
-printList l ;;
-print_string "\nbigNumFromList ( constructInt64List ( power_int_positive_int 2 300 ) ) = \n";;
-print_string (string_of_big_int k);;
 print_string "\n";;

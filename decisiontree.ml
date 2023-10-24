@@ -1,7 +1,4 @@
-#use "topfind";;
-#require "num";;
-open Num;;
-open Big_int;;
+
 open Random;;
 #use "int64list.ml";;
 
