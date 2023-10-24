@@ -12,8 +12,8 @@ type int64list = { mutable l : int64 list; mutable size : int }
   @param x The element to insert.
   @param l The list to insert into.
 *)
-let insertEndlist (x : int64) (l : int64list) : unit =
-  l.l <- l.l@[x];
+let insertStartlist (x : int64) (l : int64list) : unit =
+  l.l <- x:: l.l;
   l.size <- l.size + 1
 ;;
 
@@ -61,14 +61,14 @@ let rec constructList (power : int) : int64list =
   let base = Int64.shift_left 1L 64 in
   let rec constructList' (n : int) (acc : int64list) =
     if n <= 64 then (
-      insertEndlist (Int64.shift_left 1L n) acc;
+      insertStartlist (Int64.shift_left 1L n) acc;
       acc
     )
     else (
       let y = if n >= 64 then 0L else Int64.shift_left 1L (n - 64) in
       let z = n - 64 in
       let new_acc = constructList' z acc in  (* Recursive call first *)
-      insertEndlist y new_acc;  (* Then insert y *)
+      insertStartlist y new_acc;  (* Then insert y *)
       new_acc
     )
   in

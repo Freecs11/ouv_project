@@ -78,13 +78,13 @@ let calculateInt64list (l:bool list) : int64list =
   let rec aux (l:bool list) (auxi:int64list) : int64list = 
     if List.length l <= 64 then 
       let k = boolListToInt64 l in
-      insertEndlist k auxi ;
+      insertStartlist k auxi ;
       auxi
     else 
       let l1 , l2 = split_list_at_n l 64 in
       let k = boolListToInt64 l1 in
       let kf = aux l2 auxi in
-      insertEndlist k kf ;
+      insertStartlist k kf ;
       kf
   in
   aux l {l=[];size=0}
