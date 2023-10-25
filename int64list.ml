@@ -248,28 +248,49 @@ print_string "\n";;
 (* Question 6 *)
 (*
   n = nombre de bits de l'eniter à générer
+  Pour constituer un entier aléatoire sur maximum n bits, on construit une liste d’entiers
+contenant ℓ entiers avec ℓ = n/64, chaque entier étant sur 64 bits, suivi d’un entier aléatoire inférieur à
+n−ℓ×64. Ainsi si on souhaite un entier aléatoire contenant au plus 100 bits, on génère aléatoirement un
+entier sur 64 bits, suivi d’un entier strictement plus petit que 2
+36. Définir une fonction GenAlea prenant
+en entrée une valeur n et générant un grand entier aléatoire de n bits au maximum
  *)
-let genAlea (n : int) : int64list =
+ let genAlea (n : int) : int64list =
   let rec aux (n : int) (l : int64list) =
     if n <= 0 then l
-    else
-      let max_64 = Int64.shift_left 1L 64 in (* 2^64 *)
-      if l.size * 64 < n then (* si on a pas encore atteint n bits *)
-        let rando = Random.int64 max_64 in (* on génère un entier aléatoire sur 64 bits *)
-        aux (n - 64) { l =  l.l @ [rando]; size = l.size + 1 } (* on ajoute cet entier à la liste et on continue *)
-      else (* on a atteint n bits *)
-        let bits_to_generate = n mod 64 in (* on calcule le nombre de bits à générer *)
-        let rando = Random.int64 (Int64.shift_left 1L bits_to_generate) in (* on génère un entier aléatoire sur bits_to_generate bits *)
-        aux (n - bits_to_generate) { l = l.l @ [rando]; size = l.size + 1 } (* on ajoute cet entier à la liste et on continue *)
+    else (
+      let g = Int64.max_int in
+      (* Check if we can generate a 64-bit random integer *)
+      if n >= 64 then  (
+        insertEndlist (Random.int64 g) l;
+        aux (n - 64) l 
+      )
+      else  (
+        let g = Int64.shift_right g (64 - n) in   (* g est un entier généré sur 64 bits donc on shift à droit de 64-n*)
+        insertEndlist (Random.int64 g) l;
+        aux 0 l
+      )
+    )
   in 
   aux n { l = []; size = 0 }
 ;;
 
+let random_number_100 = genAlea 100;;  (* Generate a random number with up to 100 bits *)
+let random_number_300 = genAlea 300;;  (* Generate a random number with up to 300 bits *)
+let random_number_1000 = genAlea 1000;;  (* Generate a random number with up to 1000 bits *)
 
 (* test *)
-let k = genAlea 100;;
 print_string "\ngenAlea 100 = \n";;
-printList k;;
+printList random_number_100;;
+print_string "\n";;
+
+print_string "\ngenAlea 300 = \n";;
+printList random_number_300;;
+print_string "\n";;
+
+print_string "\ngenAlea 1000 = \n";;
+printList random_number_1000;;
+print_string "\n";;
 
 
 

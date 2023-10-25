@@ -146,45 +146,62 @@ print_string "\nsearchListeDejaVus ( calculateInt64list(liste_feuilles ( cons_ar
 printTree (match k with Some k -> k | None -> Leaf false) "";;
 
 
-(*— règle-M : Si deux nœuds M et N sont les racines de sous-arbres ayant le même résultat pour
-liste_feuilles, alors les arêtes pointant vers N sont remplacées par des arêtes pointant vers
-M dans toute la structure ; puis le nœud N est supprimé de la structure.
-*)
-let rec applyRuleM (tree : decisionTree) (l : listeDejaVus) (ltrue:decisionTree) (lfalse:decisionTree): decisionTree =
-  let leaf_list = liste_feuilles tree in
-  let int64list = calculateInt64list leaf_list in
-  match (searchListeDejaVus int64list l), tree with
-  | Some t, _ -> t
-  | None, Leaf b -> if b then ltrue else lfalse
-  | None, Node (a, t1, t2) ->
-    let compressedT1 = applyRuleM t1 l ltrue lfalse in
-    let compressedT2 = applyRuleM t2 l ltrue lfalse in
-      let compressedTree = Node (a, compressedT1, compressedT2) in
-      insertEndListeDejaVus int64list compressedTree l; 
-      compressedTree
 
+let allInListFalse (l : bool list) : bool =
+  let rec aux (l : bool list) : bool =
+    match l with
+    | [] -> true
+    | h :: t -> if h then false else aux t
+  in
+  aux l
 
-(*règle-Z : si l’enfant droit de N pointe vers f alse, alors toutes les arêtes pointant vers N sont
-remplacées par des arêtes pointant vers l’enfant gauche de N ; puis le nœud N est supprimé de
-la structure*)
-let rec applyRuleZ (tree : decisionTree) (parent : decisionTree) : decisionTree =
-  match tree with
-  | Leaf b -> tree
-  | Node (a, t1, t2) ->
-    let compressedT1 = applyRuleZ t1 tree in
-    let compressedT2 = applyRuleZ t2 tree in
-    match compressedT2 with
-    | Leaf false -> compressedT1
-    | _ -> Node (a, compressedT1, compressedT2)
-  ;;
+(* Définir une structure de données permettant d’encoder une liste, nommée ListeDejaVus
+par la suite, dont les éléments sont des couples avec la première composante étant un grand entier (i.
+e. une liste d’entiers), et la seconde composante un pointeur vers un nœud d’un graphe.
+Voilà l’algorithme élémentaire de compression d’un arbre de décision.
+— Soit G l’arbre de décision qui sera compressé petit à petit. Soit une liste ListeDejaVus vide.
+— En parcourant G via un parcours suffixe, étant donné N le nœud en cours de visite :
+— Calculer la liste_feuilles associées à N (le nombre d’éléments qu’elle contient est une
+puissance de 2).
+— Si la deuxième moitié de la liste ne contient que des valeurs false alors remplacer le pointeur
+vers N (depuis son parent) vers un pointeur vers l’enfant gauche de N
+— Sinon, calculer le grand entier n correspondant à liste_feuilles du sous-arbre enraciné
+en N ;
+— Si n est la première composante d’un couple stocké dans ListeDejaVus, alors remplacer le
+pointeur vers N (depuis son parent) par un pointeur vers la seconde composante du couple en
+question ;
+— Sinon ajouter en tête de ListeDejaVus un couple constitué du grand entier n et d’un pointeur
+vers N. *)
 let compressionParListe (decTree : decisionTree) (l : listeDejaVus) : decisionTree =
-  let ltrue = Leaf true in
-  let lfalse = Leaf false in
-  let compressedT1Z = applyRuleZ decTree decTree in
-  let compressedT1M = applyRuleM compressedT1Z l ltrue lfalse in
-  compressedT1M
-;;
-
+  let rec compressionAux (decTree : decisionTree) (l : listeDejaVus) : decisionTree =
+    let calculatedList = liste_feuilles decTree in
+    let calculatedInt64list = calculateInt64list calculatedList in
+    match decTree with
+    | Leaf b -> (
+      match searchListeDejaVus {l= calculatedInt64list.l; size=calculatedInt64list.size} l with
+      | Some t -> t
+      | None ->
+        let comp = Leaf b in
+        insertEndListeDejaVus {l= calculatedInt64list.l; size=calculatedInt64list.size} comp l;
+        comp
+      )
+    | Node (a, t1, t2) ->
+      match searchListeDejaVus calculatedInt64list l with
+      | Some t -> t
+      | None ->
+        let feuillesT2 = liste_feuilles t2 in
+        if allInListFalse feuillesT2 then
+          let compressedT1 = compressionAux t1 l in
+          compressedT1
+        else
+          let compressedT1 = compressionAux t1 l in
+          let compressedT2 = compressionAux t2 l in
+          let comp = Node (a, compressedT1, compressedT2) in 
+          insertEndListeDejaVus calculatedInt64list comp l;
+          comp
+  in
+  compressionAux decTree l
+      ;;
 
 (* test *)
 let k = table {l=[25899L] ; size=1} 16;;
@@ -195,6 +212,7 @@ let k = compressionParListe kd  {l=[]};;
 print_string "\ncompression ( cons_arbre ( table 25899 64 ) ) = \n";;
 printTree k "";;
 ;;
+
 
 (* Generation du fichier DOT*)
 

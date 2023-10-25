@@ -16,10 +16,13 @@ digraph G {
 1 -> 5;
 7 [label="2" shape="cercle"];
 8 [label="3" shape="cercle"];
-8 -> 5 [style=dotted];
+8 -> 4 [style=dotted];
 8 -> 4;
-7 -> 3 [style=dotted];
-7 -> 8;
+9 [label="3" shape="cercle"];
+9 -> 5 [style=dotted];
+9 -> 4;
+7 -> 8 [style=dotted];
+7 -> 9;
 0 -> 1 [style=dotted];
 0 -> 7;
 }
