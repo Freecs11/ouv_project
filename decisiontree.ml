@@ -214,79 +214,143 @@ printTree k "";;
 ;;
 
 
-(* Generation du fichier DOT*)
 
-type visitedTrees = (decisionTree * int) list;;
+(*
+Définir une structure arborescente de données ArbreDejaVus permettant d’encoder
+un arbre binaire tel que l’arête gauche est associé au booléen false et l’arête droite au booléen true.
+Les nœuds sont étiquetés avec un pointeur vers un nœud d’un graphe (ou ne sont pas étiquetés suivant
+le cas).
+L’association d’un booléen à chaque arête permet de se déplacer dans un arbre via une table de
+vérité. Ainsi pour atteindre le nœud associé à [f alse;true;true; f alse], on descend à gauche depuis la
+racine, puis 2 fois à droite et finalement à gauche.
+On va utiliser ArbreDejaVus en tant qu’arbre de recherche pour stocker les pointeurs vers des
+sous-arbres déjà vus.   
+*)
+type arbreDejaVus = 
+  | Leaf of decisionTree
+  | Node of bool * arbreDejaVus * arbreDejaVus
 
-let add_to_visited_trees (t: decisionTree) (id) (l: visitedTrees) : visitedTrees =
-  (t, id) :: l
+
+(*
+Q 2 ) 
+  Adapter l’algorithme élémentaire pour utiliser l’arbre de recherche ArbreDejaVus
+au lieu de la ListeDejaVus.*)
+(*
+  algorithm compressionParArbre :
+  -Soit G l’arbre de décision qui sera compressé petit à petit. Soit un arbreDejaVus vide.
+  -En parcourant G via un parcours suffixe, étant donné N le nœud en cours de visite :
+  -Calculer la liste_feuilles associées à N (le nombre d’éléments qu’elle contient est une puissance de 2).
+  -Si la deuxième moitié de la liste ne contient que des valeurs false alors remplacer le pointeur vers N (depuis son parent) vers un pointeur vers l’enfant gauche de N
+  -Sinon, parcourir l’arbreDejaVus en suivant le chemin correspondant à la liste_feuilles du sous-arbre enraciné en N ;
+  -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un pointeur vers le nœud correspondant au chemin ;
+  -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un pointeur vers N.
+*)
+
+let rec insertNodeABR (decTree :decisionTree) (abr : arbreDejaVus) : arbreDejaVus =
+  match abr with
+  | Leaf t -> Leaf decTree
+  | Node (b, t1, t2) -> Leaf decTree
+
+  let constructABR (l : bool list) (dec : decisionTree) : arbreDejaVus =
+    let rec aux (l : bool list) (dec : decisionTree) (abr : arbreDejaVus) : arbreDejaVus =
+      match l with 
+      | [] -> insertNodeABR dec abr
+      | h::t -> 
+        match abr with
+        | Leaf t -> 
+          if h then Node (h, Leaf dec, Leaf t)
+          else Node (h, Leaf t, Leaf dec)
+        | Node (b, t1, t2) ->
+          if h then Node (b, t1, aux t dec t2)
+          else Node (b, aux t dec t1, t2)
+    in
+    aux l dec (Leaf dec)
+  ;;
+
+  let rec addToExistingABR (l : bool list) (dec : decisionTree) (abr : arbreDejaVus) : arbreDejaVus =
+    match l with
+    | [] -> insertNodeABR dec abr
+    | h::t -> 
+      match abr with
+      | Leaf t -> 
+        if h then Node (h, Leaf dec, Leaf t)
+        else Node (h, Leaf t, Leaf dec)
+      | Node (b, t1, t2) ->
+        if h then Node (b, t1, addToExistingABR t dec t2)
+        else Node (b, addToExistingABR t dec t1, t2)
+  ;;
+
+let rec printArbreDejaVus (abr : arbreDejaVus) (indent : string) : unit = 
+    match abr with
+    | Leaf t -> printTree t indent
+    | Node (b, t1, t2) -> 
+      print_string (indent ^ "├─ " ^ "Bool " ^ string_of_bool b ^ "\n");
+      printArbreDejaVus t1 (indent ^ "│  ");
+      printArbreDejaVus t2 (indent ^ "│  ")
+  ;;
+
+  (* test *)
+
+let k = constructABR [true; true; false; true; false; true; false; false; true; false; true; false; false; true; true; false] kd;;
+let k = addToExistingABR [true; true; false; true; false; true; false; false; true; false; false; true; false; false; true; true; false] kd k;;
+print_string "\nconstructABR ( liste_feuilles ( cons_arbre ( table 25899 64 ) ) ) ( cons_arbre ( table 25899 64 ) ) = \n";;
+printArbreDejaVus k "";;
 ;;
 
-let rec visited_trees_contains (t: decisionTree) (l: visitedTrees) : bool =
+let rec searchArbreDejaVu (l : bool list) (abr : arbreDejaVus) : decisionTree option =
   match l with
-  | [] -> false
-  | (t1, _) :: t2 -> if t1 == t then true else visited_trees_contains t t2
+  | [] -> (
+    match abr with
+    | Leaf t -> Some t
+    | Node (b, t1, t2) -> None
+    )
+  | h::t -> 
+    match abr with
+    | Leaf t -> None
+    | Node (b, t1, t2) ->
+      if h then searchArbreDejaVu t t2
+      else searchArbreDejaVu t t1
 ;;
 
-let rec get_id_from_visited_trees (t: decisionTree) (l: visitedTrees) : int =
-  match l with
-  | [] -> raise (Failure "Tree not found")
-  | (t1, id) :: t2 -> if t1 == t then id else get_id_from_visited_trees t t2
-;;
-
-type node_info = {
-  label: string;
-  shape: string;
-  style: string option;
-  id: int;
-  nb_child_written: int ref;
-}
-;;
-let next_id = ref 0
-;;
-let get_next_id () =
-  let current_id = !next_id in 
-  next_id := current_id + 1;
-  current_id
-;;
-
-let rec dot (t : decisionTree) (visited : visitedTrees) : string * node_info * visitedTrees =
-  (* visit a node , see if it's in the visited , if so then just ignore it *)
-  if visited_trees_contains t visited then
-    let id = get_id_from_visited_trees t visited in
-    let node_info = { label = ""; shape = "cercle"; style = None; id = id; nb_child_written = ref 0 } in
-    ("", node_info, visited)
-  else
-    (* if not visited then add it to the visited list *)
-    let id = get_next_id () in
-    let visited = add_to_visited_trees t id visited in
-    match t with
-    | Leaf b ->
-      let node_info = { label = string_of_bool b; shape = "cercle"; style = None; id = id; nb_child_written = ref 0 } in
-      (Printf.sprintf "%d [label=\"%s\" shape=\"%s\"];\n" id node_info.label node_info.shape, node_info, visited)
-    | Node (n, t1, t2) ->
-      let node_info = { label = string_of_int n; shape = "cercle"; style = None; id = id; nb_child_written = ref 0 } in
-      let dot_t1, node_info_t1, visited = dot t1 visited in
-      let dot_t2, node_info_t2, visited = dot t2 visited in
-      let dot_string = Printf.sprintf "%d [label=\"%s\" shape=\"%s\"];\n" id node_info.label node_info.shape in
-      let dot_string = dot_string ^ dot_t1 ^ dot_t2 in
-      let dot_string = dot_string ^ Printf.sprintf "%d -> %d %s;\n" id node_info_t1.id "[style=dotted]" in
-      let dot_string = dot_string ^ Printf.sprintf "%d -> %d;\n" id node_info_t2.id in
-      (dot_string, node_info, visited)
+let compressionParArbre (decTree : decisionTree) (abr : arbreDejaVus) : decisionTree =
+  let rec compressionAux (decTree : decisionTree) (abr : arbreDejaVus) : decisionTree =
+    let calculatedList = liste_feuilles decTree in
+    match decTree with
+    | Leaf b -> (
+      match searchArbreDejaVu calculatedList abr with
+      | Some t -> t
+      | None ->
+        addToExistingABR calculatedList decTree abr;
+        decTree
+      )
+    | Node (a, t1, t2) -> (
+      match searchArbreDejaVu calculatedList abr with
+      | Some t -> t
+      | None ->
+        let feuillesT2 = liste_feuilles t2 in
+        if allInListFalse feuillesT2 then
+          let compressedT1 = compressionAux t1 abr in
+          compressedT1
+        else
+          let compressedT1 = compressionAux t1 abr in
+          let compressedT2 = compressionAux t2 abr in
+          let comp : decisionTree = Node (a, compressedT1, compressedT2) in 
+          addToExistingABR calculatedList comp abr;
+          comp
+    )
+  in
+  compressionAux decTree abr
 ;;
 
 
-let generate_dot_file (t : decisionTree) (filename : string) : unit =
-  next_id := 0;
-  let dot_content, _, _ = dot t [] in
-  let dot_string = Printf.sprintf "digraph G {\n%s}\n" dot_content in
-  let oc = open_out filename in
-  Printf.fprintf oc "%s" dot_string;
-  close_out oc
-;;
 
+
+
+(* test *)
 let k = table {l=[25899L] ; size=1} 16;;
 let kd = cons_arbre k;;
-generate_dot_file kd "test.dot";;    
-let k = compressionParListe kd {l=[]};;
-generate_dot_file k "testtable16.dot";;
+print_string "\ncons_arbre ( table 25899 64 ) = \n";;
+printTree kd "" ;;
+let k = compressionParArbre kd (Leaf kd);;
+print_string "\ncompression ( cons_arbre ( table 25899 64 ) ) = \n";;
+printTree k "";;
