@@ -12,6 +12,7 @@ chaque nœud interne possède deux enfants qui sont des arbres de décision et l
 contiennent un booléen, true ou false. *)
 
 type decisionTree = 
+  | Empty
   | Leaf of bool
   | Node of int * decisionTree * decisionTree
 ;;
@@ -21,15 +22,14 @@ type decisionTree =
 de décision associé à la table de vérité T. Il s’agit d’un arbre binaire totalement équilibré, dont les
 nœuds internes ont pour étiquette la valeur de leur profondeur et les feuilles sont étiquetées (via le
 parcours préfixe) avec les éléments de T *)
-
 let cons_arbre (t : bool list) : decisionTree =
   match t with
-  | [] -> raise (Failure "Empty list")
+  | [] -> Empty
   | [h] -> Leaf h
   | _ -> 
     let rec aux_cons (t : bool list) (n : int) : decisionTree = 
       match t with
-      | [] -> raise (Failure "Empty list")
+      | [] -> Empty
       | [h] -> Leaf h
       | _ -> 
         let l = List.length t in
@@ -41,6 +41,7 @@ let cons_arbre (t : bool list) : decisionTree =
 
 let rec printTree (t : decisionTree) (indent : string) : unit = 
   match t with
+  | Empty -> print_string (indent ^ "└─ Empty\n")
   | Leaf b -> print_string (indent ^ "└─ " ^ string_of_bool b ^ "\n")
   | Node (n, t1, t2) -> 
     print_string (indent ^ "├─ " ^ "Depth " ^ string_of_int n ^ "\n");
@@ -62,6 +63,7 @@ liste_feuilles et qui construit la liste des étiquettes des feuilles du sous-ar
 ordonnée de la feuille la plus à gauche jusqu’à celle la plus à droite. *)
 let rec liste_feuilles (t : decisionTree) : bool list = 
   match t with
+  | Empty -> []
   | Leaf b -> [b]
   | Node (n, t1, t2) -> liste_feuilles t1 @ liste_feuilles t2
 ;;
@@ -177,6 +179,7 @@ let compressionParListe (decTree : decisionTree) (l : listeDejaVus) : decisionTr
     let calculatedList = liste_feuilles decTree in
     let calculatedInt64list = calculateInt64list calculatedList in
     match decTree with
+    | Empty -> Empty
     | Leaf b -> (
       match searchListeDejaVus {l= calculatedInt64list.l; size=calculatedInt64list.size} l with
       | Some t -> t
@@ -227,8 +230,9 @@ On va utiliser ArbreDejaVus en tant qu’arbre de recherche pour stocker les poi
 sous-arbres déjà vus.   
 *)
 type arbreDejaVus = 
+  | Empty
   | Leaf of decisionTree
-  | Node of bool * arbreDejaVus * arbreDejaVus
+  | Node of arbreDejaVus * arbreDejaVus
 
 
 (*
@@ -245,112 +249,3 @@ au lieu de la ListeDejaVus.*)
   -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un pointeur vers le nœud correspondant au chemin ;
   -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un pointeur vers N.
 *)
-
-let rec insertNodeABR (decTree :decisionTree) (abr : arbreDejaVus) : arbreDejaVus =
-  match abr with
-  | Leaf t -> Leaf decTree
-  | Node (b, t1, t2) -> Leaf decTree
-
-  let constructABR (l : bool list) (dec : decisionTree) : arbreDejaVus =
-    let rec aux (l : bool list) (dec : decisionTree) (abr : arbreDejaVus) : arbreDejaVus =
-      match l with 
-      | [] -> insertNodeABR dec abr
-      | h::t -> 
-        match abr with
-        | Leaf t -> 
-          if h then Node (h, Leaf dec, Leaf t)
-          else Node (h, Leaf t, Leaf dec)
-        | Node (b, t1, t2) ->
-          if h then Node (b, t1, aux t dec t2)
-          else Node (b, aux t dec t1, t2)
-    in
-    aux l dec (Leaf dec)
-  ;;
-
-  let rec addToExistingABR (l : bool list) (dec : decisionTree) (abr : arbreDejaVus) : arbreDejaVus =
-    match l with
-    | [] -> insertNodeABR dec abr
-    | h::t -> 
-      match abr with
-      | Leaf t -> 
-        if h then Node (h, Leaf dec, Leaf t)
-        else Node (h, Leaf t, Leaf dec)
-      | Node (b, t1, t2) ->
-        if h then Node (b, t1, addToExistingABR t dec t2)
-        else Node (b, addToExistingABR t dec t1, t2)
-  ;;
-
-let rec printArbreDejaVus (abr : arbreDejaVus) (indent : string) : unit = 
-    match abr with
-    | Leaf t -> printTree t indent
-    | Node (b, t1, t2) -> 
-      print_string (indent ^ "├─ " ^ "Bool " ^ string_of_bool b ^ "\n");
-      printArbreDejaVus t1 (indent ^ "│  ");
-      printArbreDejaVus t2 (indent ^ "│  ")
-  ;;
-
-  (* test *)
-
-let k = constructABR [true; true; false; true; false; true; false; false; true; false; true; false; false; true; true; false] kd;;
-let k = addToExistingABR [true; true; false; true; false; true; false; false; true; false; false; true; false; false; true; true; false] kd k;;
-print_string "\nconstructABR ( liste_feuilles ( cons_arbre ( table 25899 64 ) ) ) ( cons_arbre ( table 25899 64 ) ) = \n";;
-printArbreDejaVus k "";;
-;;
-
-let rec searchArbreDejaVu (l : bool list) (abr : arbreDejaVus) : decisionTree option =
-  match l with
-  | [] -> (
-    match abr with
-    | Leaf t -> Some t
-    | Node (b, t1, t2) -> None
-    )
-  | h::t -> 
-    match abr with
-    | Leaf t -> None
-    | Node (b, t1, t2) ->
-      if h then searchArbreDejaVu t t2
-      else searchArbreDejaVu t t1
-;;
-
-let compressionParArbre (decTree : decisionTree) (abr : arbreDejaVus) : decisionTree =
-  let rec compressionAux (decTree : decisionTree) (abr : arbreDejaVus) : decisionTree =
-    let calculatedList = liste_feuilles decTree in
-    match decTree with
-    | Leaf b -> (
-      match searchArbreDejaVu calculatedList abr with
-      | Some t -> t
-      | None ->
-        addToExistingABR calculatedList decTree abr;
-        decTree
-      )
-    | Node (a, t1, t2) -> (
-      match searchArbreDejaVu calculatedList abr with
-      | Some t -> t
-      | None ->
-        let feuillesT2 = liste_feuilles t2 in
-        if allInListFalse feuillesT2 then
-          let compressedT1 = compressionAux t1 abr in
-          compressedT1
-        else
-          let compressedT1 = compressionAux t1 abr in
-          let compressedT2 = compressionAux t2 abr in
-          let comp : decisionTree = Node (a, compressedT1, compressedT2) in 
-          addToExistingABR calculatedList comp abr;
-          comp
-    )
-  in
-  compressionAux decTree abr
-;;
-
-
-
-
-
-(* test *)
-let k = table {l=[25899L] ; size=1} 16;;
-let kd = cons_arbre k;;
-print_string "\ncons_arbre ( table 25899 64 ) = \n";;
-printTree kd "" ;;
-let k = compressionParArbre kd (Leaf kd);;
-print_string "\ncompression ( cons_arbre ( table 25899 64 ) ) = \n";;
-printTree k "";;

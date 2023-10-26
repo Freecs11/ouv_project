@@ -49,6 +49,7 @@ let rec dot (t : decisionTree) (visited : visitedTrees) : string * node_info * v
     let id = get_next_id () in
     let visited = add_to_visited_trees t id visited in
     match t with
+    | Empty -> "" , { label = ""; shape = "cercle"; style = None; id = id; nb_child_written = ref 0 }, visited
     | Leaf b ->
       let node_info = { label = string_of_bool b; shape = "cercle"; style = None; id = id; nb_child_written = ref 0 } in
       (Printf.sprintf "%d [label=\"%s\" shape=\"%s\"];\n" id node_info.label node_info.shape, node_info, visited)
@@ -75,8 +76,8 @@ let generate_dot_file (t : decisionTree) (filename : string) : unit =
 
 let k = table {l=[25899L] ; size=1} 16;;
 let kd = cons_arbre k;;
-generate_dot_file kd "test.dot";;    
+generate_dot_file kd "testsimple.dot";;    
 let k = compressionParListe kd {l=[]};;
-generate_dot_file k "testtable16.dot";;
+generate_dot_file k "testcompressed.dot";;
 
 
