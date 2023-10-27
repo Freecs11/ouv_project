@@ -229,9 +229,11 @@ racine, puis 2 fois à droite et finalement à gauche.
 On va utiliser ArbreDejaVus en tant qu’arbre de recherche pour stocker les pointeurs vers des
 sous-arbres déjà vus.   
 *)
+
+(* c'est un Trie *)
 type arbreDejaVus = 
   | Empty
-  | Leaf of decisionTree
+  | Node of decisionTree * arbreDejaVus * arbreDejaVus
   | Node of arbreDejaVus * arbreDejaVus
 
 
