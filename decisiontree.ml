@@ -111,6 +111,7 @@ let insertEndListeDejaVus (x : int64list) (y : decisionTree) (l : listeDejaVus) 
     l.l <- (x, y) :: l.l
   ;;
 
+  (* Checks if two int64lists have the same elements by comparing one by one*)
 let checkint64listsEq (l1:int64list) (l2 : int64list) :bool =
   if l1.size <> l2.size then false
   else 
@@ -237,17 +238,55 @@ type arbreDejaVus =
   | Node of arbreDejaVus * arbreDejaVus
 
 
+
+
 (*
 Q 2 ) 
   Adapter l’algorithme élémentaire pour utiliser l’arbre de recherche ArbreDejaVus
 au lieu de la ListeDejaVus.*)
 (*
-  algorithm compressionParArbre :
+  Algorithme élémentaire compressionParArbre :
   -Soit G l’arbre de décision qui sera compressé petit à petit. Soit un arbreDejaVus vide.
   -En parcourant G via un parcours suffixe, étant donné N le nœud en cours de visite :
-  -Calculer la liste_feuilles associées à N (le nombre d’éléments qu’elle contient est une puissance de 2).
-  -Si la deuxième moitié de la liste ne contient que des valeurs false alors remplacer le pointeur vers N (depuis son parent) vers un pointeur vers l’enfant gauche de N
-  -Sinon, parcourir l’arbreDejaVus en suivant le chemin correspondant à la liste_feuilles du sous-arbre enraciné en N ;
-  -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un pointeur vers le nœud correspondant au chemin ;
-  -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un pointeur vers N.
+  -Calculer la liste_feuilles associées à N (le nombre d’éléments qu’elle contient est une
+   puissance de 2).
+  -Si la deuxième moitié de la liste ne contient que des valeurs false alors remplacer
+   le pointeur vers N (depuis son parent) vers un pointeur vers l’enfant gauche de N
+  -Sinon, parcourir l’arbreDejaVus en suivant le chemin correspondant à la 
+  liste_feuilles du sous-arbre enraciné en N ;
+  -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un 
+  pointeur vers le nœud correspondant au chemin ;
+  -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un 
+  pointeur vers N.
 *)
+
+let rec getPosition (a: arbreDejaVus) (l : bool list) : arbreDejaVus =
+  match l,a with
+  |[],Empty -> Node(Empty,Empty)
+  |x::xs,Empty -> if x then Node(Empty,getPosition Empty xs) else Node(getPosition Empty xs,Empty) 
+  |[],Node(g,d) -> a
+  |x::xs,Node(g,d) -> if x then 
+
+(* insert an int64 to an ArbreDejaVus from a bool list*)
+let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus =
+ let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
+  match path,a with
+  |[],Empty -> Node(decTree,Empty,Empty)
+  |[],Node(g,d) -> Node(decTree,g,d)
+  |[],Node(a,g,d) -> Node(a,g,d)
+  |x::xs,Empty -> if x then Node(Empty,aux Empty xs) else Node(aux Empty xs,Empty)
+  |x::xs,Node(g,d) -> if x then Node(g,aux d xs) else Node(aux g xs,d)
+  |x::xs,Node(a,g,d) -> if x then Node(a,g,aux d xs) else Node(a,aux g xs,d)
+  in aux a (bool_list t)
+
+
+
+ 
+(*   Encoder cet algorithme dans une fonction CompressionParArbre.  *)
+let CompressionParArbre (decTree : decisionTree) (a : arbreDejaVus) : decisionTree =
+  let rec loop (decTree: decisionTree) (a: arbreDejaVus) : decisionTree =
+    let feuilles = liste_feuilles decTree in
+     let value = calculateInt64List feuilles in
+    match decTree with
+    |Empty -> Empty
+    |Leaf b -> 
