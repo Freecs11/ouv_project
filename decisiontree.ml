@@ -234,8 +234,7 @@ sous-arbres déjà vus.
 (* c'est un Trie *)
 type arbreDejaVus = 
   | Empty
-  | Node of decisionTree * arbreDejaVus * arbreDejaVus
-  | Node of arbreDejaVus * arbreDejaVus
+  | Node of ( decisionTree option ) * arbreDejaVus * arbreDejaVus
 
 
 
@@ -265,10 +264,8 @@ let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus
   let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
     match path,a with
       |[],Empty -> Node(decTree,Empty,Empty)
-      |[],Node(g,d) -> Node(decTree,g,d)
       |[],Node(n,g,d) -> Node(n,g,d)
       |x::xs,Empty -> if x then Node(Empty,aux Empty xs) else Node(aux Empty xs,Empty)
-      |x::xs,Node(g,d) -> if x then Node(g,aux d xs) else Node(aux g xs,d)
       |x::xs,Node(n,g,d) -> if x then Node(n,g,aux d xs) else Node(n,aux g xs,d)
   in aux a (liste_feuilles decTree)
 
@@ -276,7 +273,7 @@ let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus
 let searchArbreDejaVus (x: int64list) (a: arbreDejaVus) : decisionTree option =
   let rec aux (a: arbreDejaVus) (l: bool list) : decisionTree option = 
     match l,a with
-    |[],Node(n,g,d) -> Some n
+    |[],Node(n,g,d) -> n
     |[],_ -> None
     |x::xs,Empty -> None
     |x::xs,_ -> if x then aux d xs else aux g xs
