@@ -280,28 +280,59 @@ au lieu de la ListeDejaVus.*)
   pointeur vers N.
 *)
 (*   Encoder cet algorithme dans une fonction CompressionParArbre.  *)
-let compressionParArbre (decTree : decisionTree) : decisionTree =
-  let rec loop (decTree: decisionTree) (arbredejavu : arbreDejaVus) : decisionTree * arbreDejaVus =
+(* let compressionParArbre (decTree : decisionTree) : decisionTree =
+  let arbredjavu = ref Empty in
+  let rec loop (decTree: decisionTree)  : decisionTree  =
     let feuilles = liste_feuilles decTree in
     match decTree with
-    | Empty -> (Empty, Empty)
-    | Leaf b -> (let comp = Leaf b in 
-      match searchArbreDejaVus (liste_feuilles comp) arbredejavu with
-      | Some t -> (t, arbredejavu)
-      | None -> 
-        (comp, insertArbreDejaVus arbredejavu comp ) 
-    )
-    | Node (n, t1, t2) -> (
-      match searchArbreDejaVus feuilles arbredejavu with
-      | Some t -> (t, arbredejavu)
-      | None -> 
-      let (compressedT1, a1) = loop t1 arbredejavu in
-      let (compressedT2, a2) = loop t2 a1 in
-      let comp = Node (n, compressedT1, compressedT2) in
-      let a = insertArbreDejaVus a2 comp  in
-      (comp, a)
-    )
+    | Empty -> Empty
+    | Leaf b -> (
+      match searchArbreDejaVus feuilles !arbredjavu with
+      | Some t -> t
+      | None ->
+        let comp = Leaf b in
+        arbredjavu := insertArbreDejaVus !arbredjavu comp;
+        comp
+      )
+    | Node (a, t1, t2) ->
+      match searchArbreDejaVus feuilles !arbredjavu with
+      | Some t -> t
+      | None ->
+        let feuillesT2 = liste_feuilles t2 in
+        if allInListFalse feuillesT2 then
+          let compressedT1 = loop t1 in
+          compressedT1
+        else
+          let compressedT1 = loop t1 in
+          let compressedT2 = loop t2 in
+          let comp = Node (a, compressedT1, compressedT2) in 
+          arbredjavu := insertArbreDejaVus !arbredjavu comp;
+          comp
   in
-  let (result, finalArbreDejaVus) = loop decTree Empty in
-  result
-;;
+  loop decTree
+;; *)
+
+let compressionParArbre (decTree : decisionTree) : decisionTree =
+  let a = ref Empty in
+  let rec loop (decTree: decisionTree)  : decisionTree =
+    let feuilles = liste_feuilles decTree in
+        match decTree with
+        |Empty -> Empty
+        |Leaf b -> ( match searchArbreDejaVus feuilles !a with
+                  |Some t -> t
+                  |None -> let compressed = Leaf(b) in
+                            a := insertArbreDejaVus !a compressed;
+                            compressed
+        )
+        |Node(n,g,d) ->( match searchArbreDejaVus feuilles !a with
+                        |Some t -> t
+                        |None -> 
+                          if allInListFalse (liste_feuilles d) then loop g 
+                          else 
+                            let compressedG = loop g in
+                            let compressedD = loop d in
+                            let compressed = Node(n,compressedG,compressedD ) in
+                                a := insertArbreDejaVus !a compressed ; 
+                                compressed
+        )
+  in loop decTree ;;
