@@ -1,4 +1,3 @@
-
 open Random;;
 #use "int64list.ml";;
 
@@ -238,7 +237,30 @@ type arbreDejaVus =
 
 
 
-(*
+
+
+(* insert an int64 to an ArbreDejaVus from a bool list*)
+(* insert an int64 to an ArbreDejaVus from a bool list*)
+let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus =
+  let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
+    match path,a with
+      |[],Empty -> Node2(Some(decTree),Empty,Empty)
+      |[],Node2(n,g,d) -> a
+      |x::xs,Empty -> if x then Node2(None,Empty,aux Empty xs) else Node2(None,aux Empty xs,Empty)
+      |x::xs,Node2(n,g,d) -> if x then Node2(n,g,aux d xs) else Node2(n,aux g xs,d)
+  in aux a (liste_feuilles decTree)
+
+(* search an int64 in the ArbreDejaVus given*)
+let searchArbreDejaVus (x: bool list) (a: arbreDejaVus) : decisionTree option =
+  let rec aux (a: arbreDejaVus) (l: bool list) : decisionTree option = 
+    match l,a with
+    |[],Node2(n,g,d) -> n
+    |[],_ -> None
+    |x::xs,Empty -> None
+    |x::xs,Node2(n,g,d) -> if x then aux d xs else aux g xs
+  in aux a x
+  
+  (*
 Q 2 ) 
   Adapter l’algorithme élémentaire pour utiliser l’arbre de recherche ArbreDejaVus
 au lieu de la ListeDejaVus.*)
@@ -257,48 +279,29 @@ au lieu de la ListeDejaVus.*)
   -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un 
   pointeur vers N.
 *)
-
-(* insert an int64 to an ArbreDejaVus from a bool list*)
-let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus =
-  let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
-    match path,a with
-      |[],Empty -> Node2(Some(decTree),Empty,Empty)
-      |[],Node2(n,g,d) -> Node2(n,g,d)
-      |x::xs,Empty -> if x then Node2(None,Empty,aux Empty xs) else Node2(None,aux Empty xs,Empty)
-      |x::xs,Node2(n,g,d) -> if x then Node2(n,g,aux d xs) else Node2(n,aux g xs,d)
-  in aux a (liste_feuilles decTree)
-
-(* search an int64 in the ArbreDejaVus given*)
-let searchArbreDejaVus (x: bool list) (a: arbreDejaVus) : decisionTree option =
-  let rec aux (a: arbreDejaVus) (l: bool list) : decisionTree option = 
-    match l,a with
-    |[],Node2(n,g,d) -> n
-    |[],_ -> None
-    |x::xs,Empty -> None
-    |x::xs,Node2(n,g,d) -> if x then aux d xs else aux g xs
-  in aux a x
-  
-
- 
 (*   Encoder cet algorithme dans une fonction CompressionParArbre.  *)
 let compressionParArbre (decTree : decisionTree) : decisionTree =
-  let rec loop (decTree: decisionTree) (a: arbreDejaVus) : decisionTree =
+  let rec loop (decTree: decisionTree) (arbredejavu : arbreDejaVus) : decisionTree * arbreDejaVus =
     let feuilles = liste_feuilles decTree in
-        match decTree with
-        |Empty -> Empty
-        |Leaf b -> (match searchArbreDejaVus feuilles a with
-                    |Some t -> t
-                    |None -> 
-                      let compressed : decisionTree = Leaf b in
-                      let _ = insertArbreDejaVus a compressed in
-                      compressed
-        )
-        |Node(n,g,d) -> ( match searchArbreDejaVus feuilles a with
-                        |Some t -> t
-                        |None -> 
-                          if allInListFalse (liste_feuilles d) then loop g a
-                          else let compressed : decisionTree = Node(n,loop g a,loop d a) in
-                                let _ = insertArbreDejaVus a compressed in
-                                compressed
-        )
-  in loop decTree Empty;;
+    match decTree with
+    | Empty -> (Empty, Empty)
+    | Leaf b -> (let comp = Leaf b in 
+      match searchArbreDejaVus (liste_feuilles comp) arbredejavu with
+      | Some t -> (t, arbredejavu)
+      | None -> 
+        (comp, insertArbreDejaVus arbredejavu comp ) 
+    )
+    | Node (n, t1, t2) -> (
+      match searchArbreDejaVus feuilles arbredejavu with
+      | Some t -> (t, arbredejavu)
+      | None -> 
+      let (compressedT1, a1) = loop t1 arbredejavu in
+      let (compressedT2, a2) = loop t2 a1 in
+      let comp = Node (n, compressedT1, compressedT2) in
+      let a = insertArbreDejaVus a2 comp  in
+      (comp, a)
+    )
+  in
+  let (result, finalArbreDejaVus) = loop decTree Empty in
+  result
+;;

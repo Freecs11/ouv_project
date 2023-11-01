@@ -77,8 +77,8 @@ let generate_dot_file (t : decisionTree) (filename : string) : unit =
 let k = table {l=[25899L] ; size=1} 16;;
 let kd = cons_arbre k;;
 generate_dot_file kd "testsimple.dot";;    
-let k = compressionParListe kd {l=[]};;
-generate_dot_file k "testcompressed.dot";;
-let k = compressionParArbre kd;;
-generate_dot_file k "testcompressed2.dot";;
+let ku = compressionParListe kd {l=[]};;
+generate_dot_file ku "testcompressed.dot";;
+let ks = compressionParArbre kd;;
+generate_dot_file ks "testcompressed22.dot";;
 
