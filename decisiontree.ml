@@ -251,7 +251,7 @@ au lieu de la ListeDejaVus.*)
   -Calculer la liste_feuilles associées à N (le nombre d’éléments qu’elle contient est une
    puissance de 2).
   -Si la deuxième moitié de la liste ne contient que des valeurs false alors remplacer
-   le pointeur vers N (depuis son parent) vers un pointeur vers l’enfant gauche de N
+   le pointeur vers N (depuis son parent) par un pointeur vers l’enfant gauche de N
   -Sinon, parcourir l’arbreDejaVus en suivant le chemin correspondant à la 
   liste_feuilles du sous-arbre enraciné en N ;
   -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un 
@@ -266,17 +266,17 @@ let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus
     match path,a with
       |[],Empty -> Node(decTree,Empty,Empty)
       |[],Node(g,d) -> Node(decTree,g,d)
-      |[],Node(a,g,d) -> Node(a,g,d)
+      |[],Node(n,g,d) -> Node(n,g,d)
       |x::xs,Empty -> if x then Node(Empty,aux Empty xs) else Node(aux Empty xs,Empty)
       |x::xs,Node(g,d) -> if x then Node(g,aux d xs) else Node(aux g xs,d)
-      |x::xs,Node(a,g,d) -> if x then Node(a,g,aux d xs) else Node(a,aux g xs,d)
+      |x::xs,Node(n,g,d) -> if x then Node(n,g,aux d xs) else Node(n,aux g xs,d)
   in aux a (liste_feuilles decTree)
 
 (* search an int64 in the ArbreDejaVus given*)
 let searchArbreDejaVus (x: int64list) (a: arbreDejaVus) : decisionTree option =
   let rec aux (a: arbreDejaVus) (l: bool list) : decisionTree option = 
     match l,a with
-    |[],Node(a,g,d) -> Some a
+    |[],Node(n,g,d) -> Some n
     |[],_ -> None
     |x::xs,Empty -> None
     |x::xs,_ -> if x then aux d xs else aux g xs
@@ -285,8 +285,18 @@ let searchArbreDejaVus (x: int64list) (a: arbreDejaVus) : decisionTree option =
 
  
 (*   Encoder cet algorithme dans une fonction CompressionParArbre.  *)
-let CompressionParArbre (decTree : decisionTree) (a : arbreDejaVus) : decisionTree =
+let CompressionParArbre (decTree : decisionTree) : decisionTree =
   let rec loop (decTree: decisionTree) (a: arbreDejaVus) : decisionTree =
     let feuilles = liste_feuilles decTree in
-     let value = calculateInt64List feuilles in
-  
+      let value = calculateInt64List feuilles in
+        match decTree with
+        |Empty -> Empty
+        |Leaf b -> insertArbreDejaVus a (Leaf b)
+        |Node(n,g,d) -> match searchArbreDejaVus value a with
+                        |Some t -> t
+                        |None -> 
+                          if allInListFalse (liste_feuilles d) then loop g a
+                          else let compressed = Node(n,loop g a,loop d a) in
+                                insertArbreDejaVus a compressed;
+                                compressed
+  in loop decTree Empty;;
