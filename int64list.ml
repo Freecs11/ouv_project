@@ -83,13 +83,13 @@ let rec constructList (power:int) :int64list =
   constructList' power { l = []; size = 0 }
 ;;
 
-
+(* 
   (* test *)
 let l = constructList 100 in
 printList l ;; 
 
 let l = constructList 300 in
-printList l ;;
+printList l ;; *)
 
 
 (* helper function to convert an int64 to its binary representation *)
@@ -111,14 +111,14 @@ approche :  Transform chaque entier en sa représentation binare et on l'inverse
     ;;
 
 (* test *)
-let nb : int64list = { l = [38L]; size = 1 };;
+(* let nb : int64list = { l = [38L]; size = 1 };;
 let k = decomposition nb;;
 print_string "\ndecomposition([38]) = \n";;
 for i = 0 to (List.length k) - 1 do
   print_string (string_of_bool (List.nth k i)); print_string " ";
 done;
 print_string "\n";;
-
+ *)
 
 (* Question 3 *)
 
@@ -150,14 +150,14 @@ let rec printboolList (l : bool list) : unit =
     print_string (string_of_bool h);
     printboolList t
   ;;
-
+(* 
 let k = completion [false; true; true; false; false; true] 4;;
 print_string "\ncompletion([false; true; true; false; false; true], 4) = \n";;
 printboolList k;;
 
 let k = completion [false; true; true; false; false; true] 8;;
 print_string "\ncompletion([false; true; true; false; false; true], 8) = \n";;
-printboolList k;;
+printboolList k;; *)
 
 (* Question 4 *)
 
@@ -170,10 +170,10 @@ let rec boolListToInt64 (x : bool list) : int64 =
     ;;
 
 (* test *)
-let k = boolListToInt64 [false; true; true; false; false; true];;
+(* let k = boolListToInt64 [false; true; true; false; false; true];;
 print_string "\nboolListToInt([false; true; true; false; false; true]) = \n";;
 print_string (Int64.to_string k);;
-print_string "\n";;
+print_string "\n";; *)
 
 (* une petite fonction pour divisé une liste de 'a type à la case n en 2 listes*)
 let rec split_list_at_n (l : 'a list) (n : int) : 'a list * 'a list =
@@ -200,9 +200,9 @@ let composition (l: bool list) : int64list =
 ;;
 
 (* test *)
-let k = composition [false; true; true; false; false; true];;
+(* let k = composition [false; true; true; false; false; true];;
 print_string "\ncomposition([false; true; true; false; false; true]) = \n";;
-printList k;;
+printList k;; *)
 
 
 
@@ -216,7 +216,7 @@ printList k;;
 let table (x : int64list) (n : int) : bool list = 
   completion (decomposition  x) n
     ;;
-
+(* 
 (* test *)
 let k = table { l=[38L] ; size=1}  8;;
 print_string "\ntable 38 8 = \n";;
@@ -243,7 +243,7 @@ let k = table { l=[25899L] ; size=1} 16;;
 print_string "\ntable 25899 64 = \n";;
 printboolList k;;
 print_string "\n";;
-
+ *)
 
 (* Question 6 *)
 (*
@@ -275,7 +275,7 @@ en entrée une valeur n et générant un grand entier aléatoire de n bits au ma
   aux n { l = []; size = 0 }
 ;;
 
-let random_number_100 = genAlea 100;;  (* Generate a random number with up to 100 bits *)
+(* let random_number_100 = genAlea 100;;  (* Generate a random number with up to 100 bits *)
 let random_number_300 = genAlea 300;;  (* Generate a random number with up to 300 bits *)
 let random_number_1000 = genAlea 1000;;  (* Generate a random number with up to 1000 bits *)
 
@@ -305,10 +305,10 @@ let f2 = constructList 300;;
 print_string "\nconstructList 300 = \n";;
 printList f2;;
 print_string "\n";;
-
+ *)
 
 (*new test*)
-let k = composition  [false; false; false; false; false; false; false; false; false; false; false;
+(* let k = composition  [false; false; false; false; false; false; false; false; false; false; false;
 false; false; false; false; false; false; false; false; false; false; false;
 false; false; false; false; false; false; false; false; false; false; false;
 false; false; false; false; false; false; false; false; false; false; false;
@@ -336,3 +336,19 @@ print_string "\ncomposition(decomposition(2^300)) = \n";;
 print_string " { " ;;
 printList x;;
 print_string "\n";;
+ *)
+
+
+let rec findClosestUpPowerOf2 (n : int) (acc : int) : int =
+  if n <= acc then acc
+  else findClosestUpPowerOf2 n (acc * 2)
+;;
+
+let transformListBoolEquilibre (l: bool list) : bool list =
+  let list_length = List.length l in
+  let closestUpPowerOf2 = findClosestUpPowerOf2 list_length 1 in
+  completion l closestUpPowerOf2
+;;
+
+
+

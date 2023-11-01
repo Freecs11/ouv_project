@@ -79,5 +79,6 @@ let kd = cons_arbre k;;
 generate_dot_file kd "testsimple.dot";;    
 let k = compressionParListe kd {l=[]};;
 generate_dot_file k "testcompressed.dot";;
-
+let k = compressionParArbre kd;;
+generate_dot_file k "testcompressed2.dot";;
 

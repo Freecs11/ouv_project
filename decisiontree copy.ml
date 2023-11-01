@@ -17,26 +17,34 @@ type decisionTree =
   | Node of int * decisionTree * decisionTree
 ;;
 
+let rec findClosestUpPowerOf2 (n : int) (acc : int) : int =
+  if n <= acc then acc
+  else findClosestUpPowerOf2 n (acc * 2)
+;;
+
+let transformListBoolEquilibre (l: bool list) : bool list =
+  let list_length = List.length l in
+  let closestUpPowerOf2 = findClosestUpPowerOf2 list_length 1 in
+  completion l closestUpPowerOf2
+;;
 
 (* Étant donné une table de vérité, écrire une fonction cons_arbre qui construit l’arbre
 de décision associé à la table de vérité T. Il s’agit d’un arbre binaire totalement équilibré, dont les
 nœuds internes ont pour étiquette la valeur de leur profondeur et les feuilles sont étiquetées (via le
 parcours préfixe) avec les éléments de T *)
+
+
 let cons_arbre (t : bool list) : decisionTree =
-  match t with
-  | [] -> Empty
-  | [h] -> Leaf h
-  | _ -> 
-    let rec aux_cons (t : bool list) (n : int) : decisionTree = 
-      match t with
-      | [] -> Empty
-      | [h] -> Leaf h
-      | _ -> 
-        let l = List.length t in
-        let l1 , l2 = split_list_at_n t (l/2) in
-        Node (n, aux_cons l1 (n+1), aux_cons l2 (n+1))
-    in
-    aux_cons t 1
+  let rec aux_cons (t : bool list) (n : int) : decisionTree = 
+    match t with
+    | [] -> Empty
+    | [h] -> Leaf h
+    | _ -> 
+      let l = List.length t in
+      let l1 , l2 = split_list_at_n t (l/2) in
+      Node (n, aux_cons l1 (n+1), aux_cons l2 (n+1))
+  in
+  aux_cons t 1
 ;;
 
 let rec printTree (t : decisionTree) (indent : string) : unit = 
@@ -111,7 +119,6 @@ let insertEndListeDejaVus (x : int64list) (y : decisionTree) (l : listeDejaVus) 
     l.l <- (x, y) :: l.l
   ;;
 
-  (* Checks if two int64lists have the same elements by comparing one by one*)
 let checkint64listsEq (l1:int64list) (l2 : int64list) :bool =
   if l1.size <> l2.size then false
   else 
@@ -232,10 +239,10 @@ sous-arbres déjà vus.
 *)
 
 (* c'est un Trie *)
-type arbreDejaVus = 
+(* type arbreDejaVus = 
   | Empty
-  | Node2 of ( decisionTree option ) * arbreDejaVus * arbreDejaVus
-
+  | Node of decisionTree * arbreDejaVus * arbreDejaVus
+  | Node of arbreDejaVus * arbreDejaVus *)
 
 
 (*
@@ -243,62 +250,43 @@ Q 2 )
   Adapter l’algorithme élémentaire pour utiliser l’arbre de recherche ArbreDejaVus
 au lieu de la ListeDejaVus.*)
 (*
-  Algorithme élémentaire compressionParArbre :
+  algorithm compressionParArbre :
   -Soit G l’arbre de décision qui sera compressé petit à petit. Soit un arbreDejaVus vide.
   -En parcourant G via un parcours suffixe, étant donné N le nœud en cours de visite :
-  -Calculer la liste_feuilles associées à N (le nombre d’éléments qu’elle contient est une
-   puissance de 2).
-  -Si la deuxième moitié de la liste ne contient que des valeurs false alors remplacer
-   le pointeur vers N (depuis son parent) par un pointeur vers l’enfant gauche de N
-  -Sinon, parcourir l’arbreDejaVus en suivant le chemin correspondant à la 
-  liste_feuilles du sous-arbre enraciné en N ;
-  -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un 
-  pointeur vers le nœud correspondant au chemin ;
-  -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un 
-  pointeur vers N.
+  -Calculer la liste_feuilles associées à N (le nombre d’éléments qu’elle contient est une puissance de 2).
+  -Si la deuxième moitié de la liste ne contient que des valeurs false alors remplacer le pointeur vers N (depuis son parent) vers un pointeur vers l’enfant gauche de N
+  -Sinon, parcourir l’arbreDejaVus en suivant le chemin correspondant à la liste_feuilles du sous-arbre enraciné en N ;
+  -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un pointeur vers le nœud correspondant au chemin ;
+  -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un pointeur vers N.
 *)
 
-(* insert an int64 to an ArbreDejaVus from a bool list*)
-let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus =
-  let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
-    match path,a with
-      |[],Empty -> Node2(Some(decTree),Empty,Empty)
-      |[],Node2(n,g,d) -> Node2(n,g,d)
-      |x::xs,Empty -> if x then Node2(None,Empty,aux Empty xs) else Node2(None,aux Empty xs,Empty)
-      |x::xs,Node2(n,g,d) -> if x then Node2(n,g,aux d xs) else Node2(n,aux g xs,d)
-  in aux a (liste_feuilles decTree)
 
-(* search an int64 in the ArbreDejaVus given*)
-let searchArbreDejaVus (x: bool list) (a: arbreDejaVus) : decisionTree option =
-  let rec aux (a: arbreDejaVus) (l: bool list) : decisionTree option = 
-    match l,a with
-    |[],Node2(n,g,d) -> n
-    |[],_ -> None
-    |x::xs,Empty -> None
-    |x::xs,Node2(n,g,d) -> if x then aux d xs else aux g xs
-  in aux a x
-  
 
- 
-(*   Encoder cet algorithme dans une fonction CompressionParArbre.  *)
-let compressionParArbre (decTree : decisionTree) : decisionTree =
-  let rec loop (decTree: decisionTree) (a: arbreDejaVus) : decisionTree =
-    let feuilles = liste_feuilles decTree in
-        match decTree with
-        |Empty -> Empty
-        |Leaf b -> (match searchArbreDejaVus feuilles a with
-                    |Some t -> t
-                    |None -> 
-                      let compressed : decisionTree = Leaf b in
-                      let _ = insertArbreDejaVus a compressed in
-                      compressed
-        )
-        |Node(n,g,d) -> ( match searchArbreDejaVus feuilles a with
-                        |Some t -> t
-                        |None -> 
-                          if allInListFalse (liste_feuilles d) then loop g a
-                          else let compressed : decisionTree = Node(n,loop g a,loop d a) in
-                                let _ = insertArbreDejaVus a compressed in
-                                compressed
-        )
-  in loop decTree Empty;;
+(*test de construction d'arbre de genAlea 300000*)
+let k = genAlea 190000;;
+let len = k.size;;
+let closest = findClosestUpPowerOf2 len 1;;
+print_string "\nlen genAlea 300000 = \n";;
+print_int len;;
+print_string "\nfindClosestUpPowerOf2 300000 1 = \n";;
+print_int closest;;
+print_string "\n";;
+let decp = decomposition k ;;
+print_string "\nlen decomposition genAlea 300000 = \n";;
+print_int (List.length decp);;
+print_string "\n";;
+
+let j = findClosestUpPowerOf2 (List.length decp) 1;;
+print_string "\nfindClosestUpPowerOf2 (len decomposition genAlea 300000) 1 = \n";;
+print_int j;;
+print_string "\n";;
+
+let tab = [true];;
+let com = completion tab j ;;
+print_string "\ncompletion [true] 524288 = \n";;
+
+let ffff = completion [true] 262144;;
+let farbre = cons_arbre ffff;;
+(* print_string "\ncons_arbre (completion [true] 524288) = \n";;
+(* printTree farbre "";; *)
+print_string "\n";; *)
