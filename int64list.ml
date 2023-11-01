@@ -1,7 +1,6 @@
 
 open Random;;
 (*
-1 - Presentation 
 Question 1   
 *)
 type int64list = { mutable l : int64 list; mutable size : int }
@@ -69,7 +68,7 @@ let rec printList (l : int64list) : unit =
 *)
 let rec constructList (power:int) :int64list =
   let rec constructList' (n : int) (acc : int64list) =
-    if n <= 64 then (
+    if n < 64 then (
       insertEndlist (Int64.shift_left 1L n) acc;
       acc
     )
@@ -83,19 +82,11 @@ let rec constructList (power:int) :int64list =
   constructList' power { l = []; size = 0 }
 ;;
 
-(* 
-  (* test *)
-let l = constructList 100 in
-printList l ;; 
 
-let l = constructList 300 in
-printList l ;; *)
-
-
-(* helper function to convert an int64 to its binary representation *)
+(* fonction qui transform un int64 en bool list *)
 let rec int64toBoolList (x : int64) (aux : bool list) : bool list =
   if x = 0L then aux
-  else int64toBoolList (Int64.div x 2L) ((Int64.rem x 2L = 1L) :: aux) (* int version :  intToBool (x/2) (x mod 2 = 1 :: aux) *)
+  else int64toBoolList (Int64.div x 2L) ((Int64.rem x 2L = 1L) :: aux) (* version int :  intToBool (x/2) (x mod 2 = 1 :: aux) *)
 ;;
 
 (*
@@ -110,18 +101,7 @@ approche :  Transform chaque entier en sa représentation binare et on l'inverse
   List.rev (decompose x.l [])
     ;;
 
-(* test *)
-(* let nb : int64list = { l = [38L]; size = 1 };;
-let k = decomposition nb;;
-print_string "\ndecomposition([38]) = \n";;
-for i = 0 to (List.length k) - 1 do
-  print_string (string_of_bool (List.nth k i)); print_string " ";
-done;
-print_string "\n";;
- *)
-
 (* Question 3 *)
-
 let completion (x:bool list)  (nb : int)  : bool list = 
   if nb < List.length x then
     let rec aux x nb auxx : bool list = 
@@ -150,18 +130,10 @@ let rec printboolList (l : bool list) : unit =
     print_string (string_of_bool h);
     printboolList t
   ;;
-(* 
-let k = completion [false; true; true; false; false; true] 4;;
-print_string "\ncompletion([false; true; true; false; false; true], 4) = \n";;
-printboolList k;;
 
-let k = completion [false; true; true; false; false; true] 8;;
-print_string "\ncompletion([false; true; true; false; false; true], 8) = \n";;
-printboolList k;; *)
 
-(* Question 4 *)
-
-(* approche : 1 + 2 * boolListToInt t  puisque on représente les bits de poids fort à gauche *)
+(* Question 4 
+  approche : 1 + 2 * boolListToInt t  puisque on représente les bits de poids fort à gauche *)
 let rec boolListToInt64 (x : bool list) : int64 = 
   match x with
   | [] -> Int64.zero
@@ -169,11 +141,6 @@ let rec boolListToInt64 (x : bool list) : int64 =
     else Int64.mul 2L (boolListToInt64 t)
     ;;
 
-(* test *)
-(* let k = boolListToInt64 [false; true; true; false; false; true];;
-print_string "\nboolListToInt([false; true; true; false; false; true]) = \n";;
-print_string (Int64.to_string k);;
-print_string "\n";; *)
 
 (* une petite fonction pour divisé une liste de 'a type à la case n en 2 listes*)
 let rec split_list_at_n (l : 'a list) (n : int) : 'a list * 'a list =
@@ -187,8 +154,7 @@ let rec split_list_at_n (l : 'a list) (n : int) : 'a list * 'a list =
     ;;
 
 let composition (l: bool list) : int64list =
-  (* use boolListToInt64 *)
-  let listof64 = ref (split_list_at_n l 64 )  in (* (list de 64 elements * reste de la liste donc il faut refaire split sur le reste également) *)
+  let listof64 = ref (split_list_at_n l 64 )  in (* (list de 64 elements * reste de la liste donc on refait split sur le reste également) *)
   let rec aux ( le : bool list * bool list) (auxi : int64list) : int64list = 
     match le with
     | ([],[]) -> auxi
@@ -199,54 +165,20 @@ let composition (l: bool list) : int64list =
   aux !listof64 { l = []; size = 0 }
 ;;
 
-(* test *)
-(* let k = composition [false; true; true; false; false; true];;
-print_string "\ncomposition([false; true; true; false; false; true]) = \n";;
-printList k;; *)
 
 
 
 
-(* Question 5 *)
-
-(* approche : on applique decomposition puis completion
+(* Question 5 
+  approche : on applique decomposition puis completion
     x: entier à transformer en bool list
     n: nombre de bits de la liste de sortie
 *)
 let table (x : int64list) (n : int) : bool list = 
   completion (decomposition  x) n
     ;;
-(* 
-(* test *)
-let k = table { l=[38L] ; size=1}  8;;
-print_string "\ntable 38 8 = \n";;
-printboolList k;;
 
-(*test sur 25899*)
-let k = decomposition { l=[25899L] ; size=1}  ;;
-print_string "\ndecomposition 25899 = \n";;
-printboolList k;;
-print_string "composition(decomposition(25899)) = \n";;
-let k = composition k;;
-printList k;;
-print_string "\n";;
-print_string "int64toBoolList 25899 = \n";;
-let k = int64toBoolList 25899L [];;
-printboolList k;;
-print_string "\n";;
-
-(* 1101 0100 1010 0110
-1100 1010 0101 011 *)
-
-(*test sur 25899*)
-let k = table { l=[25899L] ; size=1} 16;;
-print_string "\ntable 25899 64 = \n";;
-printboolList k;;
-print_string "\n";;
- *)
-
-(* Question 6 *)
-(*
+(* Question 6 
   n = nombre de bits de l'eniter à générer
   Pour constituer un entier aléatoire sur maximum n bits, on construit une liste d’entiers
 contenant ℓ entiers avec ℓ = n/64, chaque entier étant sur 64 bits, suivi d’un entier aléatoire inférieur à
@@ -266,7 +198,7 @@ en entrée une valeur n et générant un grand entier aléatoire de n bits au ma
         aux (n - 64) l 
       )
       else  (
-        let g = Int64.shift_right g (64 - n) in   (* g est un entier généré sur 64 bits donc on shift à droit de 64-n*)
+        let g = Int64.shift_right g (64 - n) in   (* g est un entier sur 64 bits donc on shift à droit de 64-n*)
         insertEndlist (Random.int64 g) l;
         aux 0 l
       )
@@ -275,75 +207,13 @@ en entrée une valeur n et générant un grand entier aléatoire de n bits au ma
   aux n { l = []; size = 0 }
 ;;
 
-(* let random_number_100 = genAlea 100;;  (* Generate a random number with up to 100 bits *)
-let random_number_300 = genAlea 300;;  (* Generate a random number with up to 300 bits *)
-let random_number_1000 = genAlea 1000;;  (* Generate a random number with up to 1000 bits *)
-
-(* test *)
-print_string "\ngenAlea 100 = \n";;
-printList random_number_100;;
-print_string "\n";;
-
-print_string "\ngenAlea 300 = \n";;
-printList random_number_300;;
-print_string "\n";;
-
-print_string "\ngenAlea 1000 = \n";;
-printList random_number_1000;;
-print_string "\n";;
-
-
-
-let f2 = constructList 164;;
-print_string "constructList 164 = \n";;
-printList f2;;
-print_string "\n";;
-
-
-
-let f2 = constructList 300;;
-print_string "\nconstructList 300 = \n";;
-printList f2;;
-print_string "\n";;
- *)
-
-(*new test*)
-(* let k = composition  [false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; false; false; false; false;
-false; false; false; false; false; false; false; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true; true;
-true; true; true; true; true; true; true; true; true; true; true];;
-print_string "\ncomposition([false; false; false; false; false; false; false; false; false; false; false;... = \n";;
-print_string " { " ;;
-printList k;;
-
-
-let x = decomposition ( constructList (300) );;
-let x = composition x;;
-print_string "\ncomposition(decomposition(2^300)) = \n";;
-print_string " { " ;;
-printList x;;
-print_string "\n";;
- *)
-
-
+(* fonction pour trouvé la puissance de 2 la plus proche de n *)
 let rec findClosestUpPowerOf2 (n : int) (acc : int) : int =
   if n <= acc then acc
   else findClosestUpPowerOf2 n (acc * 2)
 ;;
 
+(* fonction pour transformé une liste de boolean de taille quelconque en une liste de boolean de taille puissance de 2 *)
 let transformListBoolEquilibre (l: bool list) : bool list =
   let list_length = List.length l in
   let closestUpPowerOf2 = findClosestUpPowerOf2 list_length 1 in
