@@ -59,6 +59,7 @@ let generateExperimentalData () =
     if size <= max_size then (
       let before_gen_memory = measure_memory_usage () in
       let (random_tree,gen_time) = timeit (fun () -> generateRandomDecisionTree size) in
+      let zdd_size = sizeOfTree random_tree in 
       let after_gen_memory = measure_memory_usage () in
       let gen_memory = after_gen_memory -. before_gen_memory in
       let before_comp_memory = measure_memory_usage () in
@@ -69,7 +70,7 @@ let generateExperimentalData () =
       let arbre_after_compression_memory = measure_memory_usage () in
       let arbre_compression_memory = arbre_after_compression_memory -. after_comp_memory in
 
-      let row =  (size, gen_time, gen_memory, comp_time, comp_memory, compression_rate , comp_timeParArbe , compression_rateParArbe , arbre_compression_memory) in
+      let row =  (size,zdd_size, gen_time, gen_memory, comp_time, comp_memory, compression_rate , comp_timeParArbe , compression_rateParArbe , arbre_compression_memory) in
       data :=  row :: !data;
       generate_data (size + step)
     )
@@ -81,9 +82,9 @@ let generateExperimentalData () =
 let saveExperimentalData data filename =
   let oc = open_out filename in
   (*      let row =  (size, gen_time, gen_memory, comp_time, comp_memory, compression_rate) *)
-  Printf.fprintf oc "size,gen_time,gen_memory,comp_time,comp_memory,compression_rate,comp_timeParArbe,compression_rateParArbe,arbre_compression_memory\n";
-  List.iter (fun (size, gen_time, gen_memory, comp_time, comp_memory, compression_rate , comp_timeParArbe , compression_rateParArbe , arbre_compression_memory) ->
-      Printf.fprintf oc "%d, %f, %f, %f, %f, %f, %f, %f, %f\n" size gen_time gen_memory comp_time comp_memory compression_rate comp_timeParArbe compression_rateParArbe arbre_compression_memory
+  Printf.fprintf oc "size,zdd_size,gen_time,gen_memory,comp_time,comp_memory,compression_rate,comp_timeParArbe,compression_rateParArbe,arbre_compression_memory\n";
+  List.iter (fun (size, zdd_size, gen_time, gen_memory, comp_time, comp_memory, compression_rate , comp_timeParArbe , compression_rateParArbe , arbre_compression_memory) ->
+      Printf.fprintf oc "%d, %d, %f, %f, %f, %f, %f, %f, %f, %f\n" size zdd_size gen_time gen_memory comp_time comp_memory compression_rate comp_timeParArbe compression_rateParArbe arbre_compression_memory
     ) data;
   close_out oc
   ;;
@@ -91,32 +92,3 @@ let saveExperimentalData data filename =
 let data = generateExperimentalData () in
 saveExperimentalData data "experimental_data.csv";;
 
-let generateExperimentalZDDSizeData () =
-  let data = ref [] in
-  let max_size = 150000 in
-  let step = 1800 in  (* Specify your desired step size here *)
-  let rec generate_data size =
-    if size <= max_size then (
-      let (random_tree, _) = generateRandomDecisionTree size in
-      let (zdd, _) = timeit (fun () -> compressionParArbre random_tree) in
-      let zdd_size = sizeOfTree zdd in
-      let row = (size, zdd_size) in
-      data := row :: !data;
-      generate_data (size + step)
-    )
-  in
-  generate_data 0;
-  List.rev !data
-;;
-
-let saveZDDSizeData data filename =
-  let oc = open_out filename in
-  Printf.fprintf oc "size,zdd_size\n";
-  List.iter (fun (size, zdd_size) ->
-      Printf.fprintf oc "%d, %d\n" size zdd_size
-    ) data;
-  close_out oc
-;;
-
-let zdd_size_data = generateExperimentalZDDSizeData () in
-saveZDDSizeData zdd_size_data "zdd_size_data.csv";;
