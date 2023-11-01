@@ -260,26 +260,28 @@ au lieu de la ListeDejaVus.*)
   pointeur vers N.
 *)
 
-let rec getPosition (a: arbreDejaVus) (l : bool list) : arbreDejaVus =
-  match l,a with
-  |[],Empty -> Node(Empty,Empty)
-  |x::xs,Empty -> if x then Node(Empty,getPosition Empty xs) else Node(getPosition Empty xs,Empty) 
-  |[],Node(g,d) -> a
-  |x::xs,Node(g,d) -> if x then 
-
 (* insert an int64 to an ArbreDejaVus from a bool list*)
 let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus =
- let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
-  match path,a with
-  |[],Empty -> Node(decTree,Empty,Empty)
-  |[],Node(g,d) -> Node(decTree,g,d)
-  |[],Node(a,g,d) -> Node(a,g,d)
-  |x::xs,Empty -> if x then Node(Empty,aux Empty xs) else Node(aux Empty xs,Empty)
-  |x::xs,Node(g,d) -> if x then Node(g,aux d xs) else Node(aux g xs,d)
-  |x::xs,Node(a,g,d) -> if x then Node(a,g,aux d xs) else Node(a,aux g xs,d)
-  in aux a (bool_list t)
+  let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
+    match path,a with
+      |[],Empty -> Node(decTree,Empty,Empty)
+      |[],Node(g,d) -> Node(decTree,g,d)
+      |[],Node(a,g,d) -> Node(a,g,d)
+      |x::xs,Empty -> if x then Node(Empty,aux Empty xs) else Node(aux Empty xs,Empty)
+      |x::xs,Node(g,d) -> if x then Node(g,aux d xs) else Node(aux g xs,d)
+      |x::xs,Node(a,g,d) -> if x then Node(a,g,aux d xs) else Node(a,aux g xs,d)
+  in aux a (liste_feuilles decTree)
 
-
+(* search an int64 in the ArbreDejaVus given*)
+let searchArbreDejaVus (x: int64list) (a: arbreDejaVus) : decisionTree option =
+  let rec aux (a: arbreDejaVus) (l: bool list) : decisionTree option = 
+    match l,a with
+    |[],Node(a,g,d) -> Some a
+    |[],_ -> None
+    |x::xs,Empty -> None
+    |x::xs,_ -> if x then aux d xs else aux g xs
+  in aux a (liste_feuilles x)
+  
 
  
 (*   Encoder cet algorithme dans une fonction CompressionParArbre.  *)
@@ -287,6 +289,4 @@ let CompressionParArbre (decTree : decisionTree) (a : arbreDejaVus) : decisionTr
   let rec loop (decTree: decisionTree) (a: arbreDejaVus) : decisionTree =
     let feuilles = liste_feuilles decTree in
      let value = calculateInt64List feuilles in
-    match decTree with
-    |Empty -> Empty
-    |Leaf b -> 
+  
