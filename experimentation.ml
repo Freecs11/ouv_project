@@ -44,6 +44,7 @@ let measure_memory_usage () =
   memory_usage
 ;;
 
+(* Function to measure execution time in seconds *)
 let timeit f =
   let t1 = Unix.gettimeofday () in
   let result = f () in
@@ -51,6 +52,7 @@ let timeit f =
   (result, t2 -. t1)
 ;;
 
+(* genrattion of the experimental data *)
 let generateExperimentalData () =
   let data = ref [] in
   let max_size = 150000 in

@@ -3,7 +3,6 @@
 
 
 (* Generation du fichier DOT*)
-
 (* visitedTrees is a list of visited trees , it contains the tree and the id of the node in the dot file *)
 type visitedTrees = (decisionTree * int) list;;
 

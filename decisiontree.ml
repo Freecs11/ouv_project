@@ -9,7 +9,6 @@ Il s’agit d’une structure de données arborescente dont les nœuds internes 
 entier égal à sa profondeur;
 chaque nœud interne possède deux enfants qui sont des arbres de décision et les feuilles
 contiennent un booléen, true ou false. *)
-
 type decisionTree = 
   | Empty
   | Leaf of bool
@@ -38,6 +37,7 @@ let cons_arbre (t : bool list) : decisionTree =
     aux_cons t 1
 ;;
 
+(* fonction pour afficher l'arbre de décision *)
 let rec printTree (t : decisionTree) (indent : string) : unit = 
   match t with
   | Empty -> print_string (indent ^ "└─ Empty\n")
@@ -73,9 +73,10 @@ let kf = liste_feuilles kd;;
 print_string "\nliste_feuilles ( cons_arbre ( table 25899 64 ) ) = \n";;
 printboolList kf;;
 
+(* une fonction qui calcule le grand entier correspondant à une liste de booléens *)
 let calculateInt64list (l:bool list) : int64list = 
-  (* we have a boolListtoInt that converts a bool list to an int64 
-   so we can use it to convert a bool list of size 64 to an int64 and add it to our int64list *)   
+  (* On a une fonnction boolListtoInt qui convertit une liste de boolean en Int64
+  donc on va l'utiliser pour convertir une liste de booléens de taille 64 en un int64 et le rajouter à notre int64list *)   
   let rec aux (l:bool list) (auxi:int64list) : int64list = 
     if List.length l <= 64 then 
       let k = boolListToInt64 l in
@@ -102,10 +103,11 @@ printList k;;
 let k = calculateInt64list [true; true; false; true; false; true; false; false; true; false; true; false; false; true; true; false];;
 print_string "\ncalculateInt64list(liste_feuilles ( cons_arbre ( table 25899 64 ) )) = \n";;
 printList k;;
-  
+
+
 type listeDejaVus = { mutable l : (int64list * decisionTree) list }
 ;;
-
+(* fonction pour insérer un grand entier int64list et sa decisionTree dans la listeDejaVus *)
 let insertEndListeDejaVus (x : int64list) (y : decisionTree) (l : listeDejaVus) : unit =
     l.l <- (x, y) :: l.l
   ;;
@@ -148,7 +150,7 @@ print_string "\nsearchListeDejaVus ( calculateInt64list(liste_feuilles ( cons_ar
 printTree (match k with Some k -> k | None -> Leaf false) "";;
 
 
-
+(* Une fonction qui teste si une liste de booléens ne contient que des valeurs false. *)
 let allInListFalse (l : bool list) : bool =
   let rec aux (l : bool list) : bool =
     match l with
@@ -240,7 +242,6 @@ type arbreDejaVus =
 
 
 (* insert an int64 to an ArbreDejaVus from a bool list*)
-(* insert an int64 to an ArbreDejaVus from a bool list*)
 let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus =
   let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
     match path,a with
@@ -279,60 +280,30 @@ au lieu de la ListeDejaVus.*)
   -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un 
   pointeur vers N.
 *)
-(*   Encoder cet algorithme dans une fonction CompressionParArbre.  *)
-(* let compressionParArbre (decTree : decisionTree) : decisionTree =
-  let arbredjavu = ref Empty in
-  let rec loop (decTree: decisionTree)  : decisionTree  =
-    let feuilles = liste_feuilles decTree in
-    match decTree with
-    | Empty -> Empty
-    | Leaf b -> (
-      match searchArbreDejaVus feuilles !arbredjavu with
-      | Some t -> t
-      | None ->
-        let comp = Leaf b in
-        arbredjavu := insertArbreDejaVus !arbredjavu comp;
-        comp
-      )
-    | Node (a, t1, t2) ->
-      match searchArbreDejaVus feuilles !arbredjavu with
-      | Some t -> t
-      | None ->
-        let feuillesT2 = liste_feuilles t2 in
-        if allInListFalse feuillesT2 then
-          let compressedT1 = loop t1 in
-          compressedT1
-        else
-          let compressedT1 = loop t1 in
-          let compressedT2 = loop t2 in
-          let comp = Node (a, compressedT1, compressedT2) in 
-          arbredjavu := insertArbreDejaVus !arbredjavu comp;
-          comp
-  in
-  loop decTree
-;; *)
-
 let compressionParArbre (decTree : decisionTree) : decisionTree =
   let a = ref Empty in
   let rec loop (decTree: decisionTree)  : decisionTree =
     let feuilles = liste_feuilles decTree in
-        match decTree with
-        |Empty -> Empty
-        |Leaf b -> ( match searchArbreDejaVus feuilles !a with
-                  |Some t -> t
-                  |None -> let compressed = Leaf(b) in
-                            a := insertArbreDejaVus !a compressed;
-                            compressed
+    match decTree with
+    |Empty -> Empty
+    |Leaf b -> ( 
+      match searchArbreDejaVus feuilles !a with
+        |Some t -> t
+        |None -> let compressed = Leaf(b) in
+          a := insertArbreDejaVus !a compressed;
+          compressed
         )
-        |Node(n,g,d) ->( match searchArbreDejaVus feuilles !a with
-                        |Some t -> t
-                        |None -> 
-                          if allInListFalse (liste_feuilles d) then loop g 
-                          else 
-                            let compressedG = loop g in
-                            let compressedD = loop d in
-                            let compressed = Node(n,compressedG,compressedD ) in
-                                a := insertArbreDejaVus !a compressed ; 
-                                compressed
+    |Node(n,g,d) ->( 
+      match searchArbreDejaVus feuilles !a with
+        |Some t -> t
+        |None -> 
+          if allInListFalse (liste_feuilles d) then loop g 
+          else 
+            let compressedG = loop g in
+            let compressedD = loop d in
+            let compressed = Node(n,compressedG,compressedD ) in
+            a := insertArbreDejaVus !a compressed ; 
+            compressed
         )
-  in loop decTree ;;
+  in loop decTree 
+;;
