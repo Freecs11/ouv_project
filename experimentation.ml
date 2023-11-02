@@ -90,5 +90,4 @@ let saveExperimentalData data filename =
   ;;
 
 let data = generateExperimentalData () in
-saveExperimentalData data "experimental_data.csv";;
-
+saveExperimentalData data "experimental_data.csv";; 
