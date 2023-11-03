@@ -21,10 +21,6 @@ de décision associé à la table de vérité T. Il s’agit d’un arbre binair
 nœuds internes ont pour étiquette la valeur de leur profondeur et les feuilles sont étiquetées (via le
 parcours préfixe) avec les éléments de T *)
 let cons_arbre (t : bool list) : decisionTree =
-  match t with
-  | [] -> Empty
-  | [h] -> Leaf h
-  | _ -> 
     let rec aux_cons (t : bool list) (n : int) : decisionTree = 
       match t with
       | [] -> Empty
