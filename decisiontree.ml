@@ -108,7 +108,7 @@ printList k;;
 type listeDejaVus = { mutable l : (int64list * decisionTree) list }
 ;;
 (* fonction pour insérer un grand entier int64list et sa decisionTree dans la listeDejaVus *)
-let insertEndListeDejaVus (x : int64list) (y : decisionTree) (l : listeDejaVus) : unit =
+let insertHeadListeDejaVus (x : int64list) (y : decisionTree) (l : listeDejaVus) : unit =
     l.l <- (x, y) :: l.l
   ;;
 
@@ -119,7 +119,7 @@ let checkint64listsEq (l1:int64list) (l2 : int64list) :bool =
     let rec aux (l1:int64 list) (l2:int64 list) : bool = 
       match l1,l2 with
       | [],[] -> true
-      | h1::t1, h2::t2 -> if h1 = h2 then aux t1 t2 else false
+      | h1::t1, h2::t2 -> if Int64.compare h1 h2 = 0 then aux t1 t2 else false
       | _ -> false
   in
   aux l1.l l2.l
@@ -140,7 +140,7 @@ let kd = cons_arbre k;;
 let kf = liste_feuilles kd;;
 let k = calculateInt64list kf;;
 let l = {l=[]};;
-insertEndListeDejaVus k kd l;;
+insertHeadListeDejaVus k kd l;;
 let k = table {l=[25899L] ; size=1} 16;; 
 let kd = cons_arbre k;;
 let kf = liste_feuilles kd;;
@@ -187,7 +187,7 @@ let compressionParListe (decTree : decisionTree) (l : listeDejaVus) : decisionTr
       | Some t -> t
       | None ->
         let comp = Leaf b in
-        insertEndListeDejaVus {l= calculatedInt64list.l; size=calculatedInt64list.size} comp l;
+        insertHeadListeDejaVus {l= calculatedInt64list.l; size=calculatedInt64list.size} comp l;
         comp
       )
     | Node (a, t1, t2) ->
@@ -202,7 +202,7 @@ let compressionParListe (decTree : decisionTree) (l : listeDejaVus) : decisionTr
           let compressedT1 = compressionAux t1 l in
           let compressedT2 = compressionAux t2 l in
           let comp = Node (a, compressedT1, compressedT2) in 
-          insertEndListeDejaVus calculatedInt64list comp l;
+          insertHeadListeDejaVus calculatedInt64list comp l;
           comp
   in
   compressionAux decTree l
@@ -231,7 +231,6 @@ racine, puis 2 fois à droite et finalement à gauche.
 On va utiliser ArbreDejaVus en tant qu’arbre de recherche pour stocker les pointeurs vers des
 sous-arbres déjà vus.   
 *)
-
 (* c'est un Trie *)
 type arbreDejaVus = 
   | Empty
