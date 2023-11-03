@@ -272,8 +272,7 @@ au lieu de la ListeDejaVus.*)
   liste_feuilles du sous-arbre enraciné en N ;
   -Si le chemin existe alors remplacer le pointeur vers N (depuis son parent) par un 
   pointeur vers le nœud correspondant au chemin ;
-  -Sinon ajouter en tête de arbreDejaVus un couple constitué du grand entier n et d’un 
-  pointeur vers N.
+  -Sinon ajouter le nœud N dans l’arbreDejaVus ; 
 *)
 let compressionParArbre (decTree : decisionTree) : decisionTree =
   let a = ref Empty in
