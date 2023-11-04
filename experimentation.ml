@@ -93,3 +93,30 @@ let saveExperimentalData data filename =
 
 let data = generateExperimentalData () in
 saveExperimentalData data "experimental_data.csv";; 
+
+let generatedata2 ()= 
+let k = constructList 16 in
+let decp = decomposition k in
+(* let transformed = transformListBoolEquilibre decp in *)
+let farbre = cons_arbre decp in
+let sizeOfCompressedTree = sizeOfTree (compressionParListe farbre {l=[]}) in
+let sizeOfTree = sizeOfTree farbre in
+let rate = (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
+rate
+;;
+
+let generatedata3 ()=
+let k = constructList 17 in
+let decp = decomposition k in
+(* let transformed = transformListBoolEquilibre decp in *)
+let farbre = cons_arbre decp in
+let sizeOfCompressedTree = sizeOfTree (compressionParListe farbre {l=[]}) in
+let sizeOfTree = sizeOfTree farbre in
+let rate = (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
+rate
+;;
+
+print_float (generatedata2 ());;
+print_newline();;
+print_float (generatedata3 ());;
+print_newline();;
