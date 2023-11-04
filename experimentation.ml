@@ -25,7 +25,7 @@ let rec generateRandomDecisionTree (size : int) : decisionTree =
 let calculateCompressionRate (t : decisionTree) : float =
   let sizeOfCompressedTree = sizeOfTree (compressionParListe t {l=[]}) in
   let sizeOfTree = sizeOfTree t in
-  let rate = (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
+  let rate = 1.0 -. (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
   rate
 ;;
 
@@ -33,7 +33,7 @@ let calculateCompressionRate (t : decisionTree) : float =
 let calculateCompressionRateParArbre (t : decisionTree) : float =
   let sizeOfCompressedTree = sizeOfTree (compressionParArbre t) in
   let sizeOfTree = sizeOfTree t in
-  let rate = (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
+  let rate = 1.0 -. (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
   rate
 ;;
 
