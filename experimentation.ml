@@ -10,6 +10,7 @@ let rec sizeOfTree (t : decisionTree) : int =
   | Leaf b -> 1
   | Node (n, t1, t2) -> 1 + sizeOfTree t1 + sizeOfTree t2
 ;;
+
 (* on va generer des arbres de decision aleatoirement de taille 0 juqu'à 154631 qui est la taille maximale que mon algorithme peut supporter , sinon il y aura un stack overflow *) 
 let rec generateRandomDecisionTree (size : int) : decisionTree =
   let max_size = 153000 in
@@ -93,30 +94,3 @@ let saveExperimentalData data filename =
 
 let data = generateExperimentalData () in
 saveExperimentalData data "experimental_data.csv";; 
-
-let generatedata2 ()= 
-let k = constructList 16 in
-let decp = decomposition k in
-(* let transformed = transformListBoolEquilibre decp in *)
-let farbre = cons_arbre decp in
-let sizeOfCompressedTree = sizeOfTree (compressionParListe farbre {l=[]}) in
-let sizeOfTree = sizeOfTree farbre in
-let rate = (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
-rate
-;;
-
-let generatedata3 ()=
-let k = constructList 17 in
-let decp = decomposition k in
-(* let transformed = transformListBoolEquilibre decp in *)
-let farbre = cons_arbre decp in
-let sizeOfCompressedTree = sizeOfTree (compressionParListe farbre {l=[]}) in
-let sizeOfTree = sizeOfTree farbre in
-let rate = (float_of_int sizeOfCompressedTree) /. (float_of_int sizeOfTree) in
-rate
-;;
-
-print_float (generatedata2 ());;
-print_newline();;
-print_float (generatedata3 ());;
-print_newline();;

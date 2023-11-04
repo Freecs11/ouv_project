@@ -71,7 +71,7 @@ printboolList kf;;
 
 (* une fonction qui calcule le grand entier correspondant à une liste de booléens *)
 let calculateInt64list (l:bool list) : int64list = 
-  (* On a une fonnction boolListtoInt qui convertit une liste de boolean en Int64
+  (* On a une fonction boolListtoInt qui convertit une liste de boolean en Int64
   donc on va l'utiliser pour convertir une liste de booléens de taille 64 en un int64 et le rajouter à notre int64list *)   
   let rec aux (l:bool list) (auxi:int64list) : int64list = 
     if List.length l <= 64 then 
@@ -103,12 +103,12 @@ printList k;;
 
 type listeDejaVus = { mutable l : (int64list * decisionTree) list }
 ;;
-(* fonction pour insérer un grand entier int64list et sa decisionTree dans la listeDejaVus *)
+(* function to insert a couple (int64list, decisionTree) in the listeDejaVus given*)
 let insertHeadListeDejaVus (x : int64list) (y : decisionTree) (l : listeDejaVus) : unit =
     l.l <- (x, y) :: l.l
   ;;
 
-  (* Checks if two int64lists have the same elements by comparing one by one*)
+(* Checks if two int64lists have the same elements by comparing one by one*)
 let checkint64listsEq (l1:int64list) (l2 : int64list) :bool =
   if l1.size <> l2.size then false
   else 
@@ -236,7 +236,7 @@ type arbreDejaVus =
 
 
 
-(* insert an int64 to an ArbreDejaVus from a bool list*)
+(* insert a decisionTree in the ArbreDejaVus given*)
 let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus =
   let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
     match path,a with
@@ -246,7 +246,7 @@ let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) : arbreDejaVus
       |x::xs,Node2(n,g,d) -> if x then Node2(n,g,aux d xs) else Node2(n,aux g xs,d)
   in aux a (liste_feuilles decTree)
 
-(* search an int64 in the ArbreDejaVus given*)
+(* search a decisionTree in the ArbreDejaVus given*)
 let searchArbreDejaVus (x: bool list) (a: arbreDejaVus) : decisionTree option =
   let rec aux (a: arbreDejaVus) (l: bool list) : decisionTree option = 
     match l,a with

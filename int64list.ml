@@ -91,7 +91,8 @@ let rec int64toBoolList (x : int64) (aux : bool list) : bool list =
 
 (*
 Question 2   
-approche :  Transform chaque entier en sa représentation binare et on l'inverse pour avoir le résultat à la fin *)
+approche :  Transform chaque entier en sa représentation binare et on l'inverse pour avoir le résultat à la fin 
+la liste de sortie représente le nombre en little endian *)
  let decomposition (x : int64list) : bool list =  
   let rec decompose ( x:int64 list ) (aux : bool list) :bool list = 
     match x with
@@ -113,15 +114,15 @@ let completion (x:bool list)  (nb : int)  : bool list =
     aux x nb []
   else 
     let  aux x nb  : bool list = 
-       (* on ajoute false à la fin de la liste  , bit de poids faible *)
-      (*list of nb fasle*)
+      (* on ajoute false à la fin de la liste  , bit de poids faible *)
+      (*boolj list of nb fasle*)
       let boolj : bool list =  List.init nb (fun i -> false) in
       x@boolj
     in
     aux x (nb - List.length x) 
     ;;
 
-(* test *)
+(*fonction pour afficher une liste de boolean *)
 let rec printboolList (l : bool list) : unit =
   match l with
   | [] -> print_string "\n"
@@ -132,13 +133,13 @@ let rec printboolList (l : bool list) : unit =
   ;;
 
 
-(* Question 4 
-  approche : 1 + 2 * boolListToInt t  puisque on représente les bits de poids fort à gauche *)
+(* approche : 1 + 2 * boolListToInt t  puisque on représente cela en little endian, donc le bit poids faible est à la tête de la liste
+  boolListToInt : bool list -> int64 *)
 let rec boolListToInt64 (x : bool list) : int64 = 
   match x with
-  | [] -> Int64.zero
+  | [] -> Int64.zero 
   | h::t -> if h then Int64.add 1L (Int64.mul 2L (boolListToInt64 t))
-    else Int64.mul 2L (boolListToInt64 t)
+    else Int64.mul 2L (boolListToInt64 t) 
     ;;
 
 
@@ -153,6 +154,7 @@ let rec split_list_at_n (l : 'a list) (n : int) : 'a list * 'a list =
       (h :: l1, l2)
     ;;
 
+(* Question 4 *)
 let composition (l: bool list) : int64list =
   let listof64 = ref (split_list_at_n l 64 )  in (* (list de 64 elements * reste de la liste donc on refait split sur le reste également) *)
   let rec aux ( le : bool list * bool list) (auxi : int64list) : int64list = 
@@ -192,13 +194,13 @@ en entrée une valeur n et générant un grand entier aléatoire de n bits au ma
     if n <= 0 then l
     else (
       let g = Int64.max_int in
-      (* Check if we can generate a 64-bit random integer *)
+      (* on vérifie si n est supérieur à 64, si oui on ajoute un entier aléatoire sur 64 bits à la liste *)
       if n >= 64 then  (
         insertEndlist (Random.int64 g) l;
         aux (n - 64) l 
       )
       else  (
-        let g = Int64.shift_right g (64 - n) in   (* g est un entier sur 64 bits donc on shift à droit de 64-n*)
+        let g = Int64.shift_right g (64 - n) in   (* g est un entier sur 64 bits donc on shift à droit de 64-n bits pour avoir un entier sur n bits *)
         insertEndlist (Random.int64 g) l;
         aux 0 l
       )
