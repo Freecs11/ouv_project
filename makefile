@@ -6,9 +6,6 @@ run:
 	ocaml decisiontree.ml
 	ocaml dotGest.ml
 
-# run experimentations.ml ( it takes a while to finish )
-runexp:
-	ocaml experimentations.ml
 
 # clean the files
 clean:
@@ -22,6 +19,8 @@ plot:
 all:
 	make run
 	make plot
-	make clean
 
 
+install:
+	pip install matplotlib
+	pip install pandas
