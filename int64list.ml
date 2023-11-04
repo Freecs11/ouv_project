@@ -215,9 +215,19 @@ let rec findClosestUpPowerOf2 (n : int) (acc : int) : int =
 (* fonction pour transformé une liste de boolean de taille quelconque en une liste de boolean de taille puissance de 2 *)
 let transformListBoolEquilibre (l: bool list) : bool list =
   let list_length = List.length l in
+  (* on regarde si la liste est de taille puissance de 2, si oui on la retourne *)
+  if (list_length land (list_length - 1)) = 0 then l
+  else
   let closestUpPowerOf2 = findClosestUpPowerOf2 list_length 1 in
   completion l closestUpPowerOf2
 ;;
+
+(*test*)
+(* 2^5 *)
+let y = [true; false; false; false; false; false; false; false ;true];;
+let k = transformListBoolEquilibre y;;
+printboolList k;;
+
 
 
 

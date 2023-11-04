@@ -54,7 +54,7 @@ let timeit f =
 ;;
 
 (* genrattion of the experimental data *)
-let generateExperimentalData () =
+(* let generateExperimentalData () =
   let data = ref [] in
   let max_size = 150000 in
   let step = 1800 in  (* Specify your desired step size here *)
@@ -90,41 +90,72 @@ let saveExperimentalData data filename =
       Printf.fprintf oc "%d, %d, %f, %f, %f, %f, %f, %f, %f, %f\n" size zdd_size gen_time gen_memory comp_time comp_memory compression_rate comp_timeParArbe compression_rateParArbe arbre_compression_memory
     ) data;
   close_out oc
-  ;;
-
+  ;; *)
+(* 
 let data = generateExperimentalData () in
-saveExperimentalData data "experimental_data.csv";; 
+saveExperimentalData data "experimental_data.csv";;  *)
 
 
 
 
 let generateDataforN () =
   let data = ref [] in
-  let fixed_size = 50000 in
-  let step = 1000 in
-  in
+  let fixed_size = 32768 in
+  let max_size = 150000 in
+  let step = 500 in
   let rec generate_data size =
     if size <= max_size then (
       let random_tree =  generateRandomDecisionTree fixed_size in
       let treesize = sizeOfTree random_tree in 
       let compressionParArbe  = compressionParArbre random_tree in
       let zdd_size = sizeOfTree compressionParArbe in 
-      let row =  (size,zdd_size) in
+      let row =  (size,treesize,zdd_size) in
       data :=  row :: !data;
       generate_data (size + step)
-    )
+    )  in
   generate_data 100;
   List.rev !data
-
-let saveExperimentalData data filename =
+;;
+let saveExperimentalDatas data filename =
   let oc = open_out filename in
   (*      let row =  (size, zdd_size) *)
-  Printf.fprintf oc "size,zdd_size\n";
-  List.iter (fun (size, zdd_size) ->
-      Printf.fprintf oc "%d, %d\n" size zdd_size
+  Printf.fprintf oc "size,treesize,zdd_size\n";
+  List.iter (fun (size,treesize, zdd_size) ->
+      Printf.fprintf oc "%d, %d, %d\n" size treesize zdd_size
     ) data;
   close_out oc
   ;;
 
-let data = generateDataforN () in
-saveExperimentalData data "experimental_data_fixedN.csv";;
+(* let data = generateDataforN () in
+saveExperimentalDatas data "experimental_data_fixedN.csv";; *)
+
+let generateDataforRate () =
+  let data = ref [] in
+  let max_size = 150000 in
+  let step = 2000 in
+  let rec generate_data size =
+    if size <= max_size then (
+      let random_tree =  generateRandomDecisionTree size in
+      let treesize = sizeOfTree random_tree in 
+      let compression_rate = calculateCompressionRate random_tree in
+      let compression_rateParArbe = calculateCompressionRateParArbre random_tree in
+      let row =  (size,treesize,compression_rate,compression_rateParArbe) in
+      data :=  row :: !data;
+      generate_data (size + step)
+    )  in
+  generate_data 100;
+  List.rev !data
+;;
+
+let saveExperimentalDatass data filename =
+  let oc = open_out filename in
+  (*      let row =  (size, treesize, compression_rate, compression_rateParArbe) *)
+  Printf.fprintf oc "size,treesize,compression_rate,compression_rateParArbe\n";
+  List.iter (fun (size,treesize, compression_rate, compression_rateParArbe) ->
+      Printf.fprintf oc "%d, %d, %f, %f\n" size treesize compression_rate compression_rateParArbe
+    ) data;
+  close_out oc
+  ;;
+
+let data = generateDataforRate () in
+saveExperimentalDatass data "experimental_data_rate.csv";;
