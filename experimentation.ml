@@ -78,7 +78,7 @@ let generateExperimentalData () =
       generate_data (size + step)
     )
   in
-  generate_data 0;
+  generate_data 100;
   List.rev !data
 ;;
 
@@ -94,3 +94,37 @@ let saveExperimentalData data filename =
 
 let data = generateExperimentalData () in
 saveExperimentalData data "experimental_data.csv";; 
+
+
+
+
+let generateDataforN () =
+  let data = ref [] in
+  let fixed_size = 50000 in
+  let step = 1000 in
+  in
+  let rec generate_data size =
+    if size <= max_size then (
+      let random_tree =  generateRandomDecisionTree fixed_size in
+      let treesize = sizeOfTree random_tree in 
+      let compressionParArbe  = compressionParArbre random_tree in
+      let zdd_size = sizeOfTree compressionParArbe in 
+      let row =  (size,zdd_size) in
+      data :=  row :: !data;
+      generate_data (size + step)
+    )
+  generate_data 100;
+  List.rev !data
+
+let saveExperimentalData data filename =
+  let oc = open_out filename in
+  (*      let row =  (size, zdd_size) *)
+  Printf.fprintf oc "size,zdd_size\n";
+  List.iter (fun (size, zdd_size) ->
+      Printf.fprintf oc "%d, %d\n" size zdd_size
+    ) data;
+  close_out oc
+  ;;
+
+let data = generateDataforN () in
+saveExperimentalData data "experimental_data_fixedN.csv";;

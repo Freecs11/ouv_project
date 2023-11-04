@@ -85,22 +85,12 @@ let rec constructList (power:int) :int64list =
 
 (* fonction qui transform un int64 en bool list *)
 let rec int64toBoolList (x : int64) (aux : bool list) : bool list =
-  if x = 0L then aux
-  else int64toBoolList (Int64.div x 2L) ((Int64.rem x 2L = 1L) :: aux) (* version int :  intToBool (x/2) (x mod 2 = 1 :: aux) *)
+  match x with
+  | 0L -> aux
+  | x -> if (Int64.logand x 1L) = 1L then int64toBoolList (Int64.shift_right x 1) (true :: aux)
+    else int64toBoolList (Int64.shift_right x 1) (false :: aux)
 ;;
 
-(*
-Question 2   
-approche :  Transform chaque entier en sa représentation binare et on l'inverse pour avoir le résultat à la fin 
-la liste de sortie représente le nombre en little endian *)
- let decomposition (x : int64list) : bool list =  
-  let rec decompose ( x:int64 list ) (aux : bool list) :bool list = 
-    match x with
-    | [] -> aux
-    | h::t -> decompose t (int64toBoolList h aux)
-  in
-  List.rev (decompose x.l [])
-    ;;
 
 (* Question 3 *)
 let completion (x:bool list)  (nb : int)  : bool list = 
@@ -120,6 +110,13 @@ let completion (x:bool list)  (nb : int)  : bool list =
       x@boolj
     in
     aux x (nb - List.length x) 
+    ;;
+
+let rec decomposition (x : int64list) : bool list =
+  match x.l with
+    | [] -> failwith "Empty List"
+    | [t] -> int64toBoolList t []
+    | h :: t -> (completion (int64toBoolList h []) 64) @ decomposition { l = t; size = x.size - 1 }
     ;;
 
 (*fonction pour afficher une liste de boolean *)

@@ -90,3 +90,10 @@ generate_dot_file ku "testcompressedListe.dot";;
 let ks = compressionParArbre kd;;
 generate_dot_file ks "testcompressedArbre.dot";;
 
+
+let k = {l=[25899L;1L] ; size=2};;
+let kd = decomposition k;;
+let kd = transformListBoolEquilibre kd;;
+let kd = cons_arbre kd;;
+let ku = compressionParListe kd {l=[]};;
+generate_dot_file ku "testcompressedArbre2.dot";;
