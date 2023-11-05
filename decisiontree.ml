@@ -234,16 +234,15 @@ type arbreDejaVus =
 
 
 (* insert a decisionTree in the ArbreDejaVus given*)
-let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) (path : bool list) :arbreDejaVus =
-  let rec aux (a: arbreDejaVus) (l: bool list) (decTree : decisionTree) : arbreDejaVus = 
-    match l,a with
-    |[],Empty -> Node2(Some decTree,Empty,Empty)
-    |[],Node2(n,g,d) -> Node2(Some decTree,g,d)
-    |x::xs,Empty -> if x then Node2(None,Empty,aux Empty xs decTree) else Node2(None,aux Empty xs decTree,Empty)
-    |x::xs,Node2(n,g,d) -> if x then Node2(n,g,aux d xs decTree) else Node2(n,aux g xs decTree,d)
-  in aux a path decTree
+let insertArbreDejaVus (a: arbreDejaVus) (decTree : decisionTree) (path : bool list) : arbreDejaVus =
+  let rec aux (a: arbreDejaVus) (path : bool list) : arbreDejaVus =
+    match path,a with
+      |[],Empty -> Node2(Some(decTree),Empty,Empty)
+      |[],Node2(n,g,d) -> a
+      |x::xs,Empty -> if x then Node2(None,Empty,aux Empty xs) else Node2(None,aux Empty xs,Empty)
+      |x::xs,Node2(n,g,d) -> if x then Node2(n,g,aux d xs) else Node2(n,aux g xs,d)
+  in aux a path
 ;;
-
 
 (* search a decisionTree in the ArbreDejaVus given*)
 let searchArbreDejaVus (x: bool list) (a: arbreDejaVus) : decisionTree option =
@@ -255,8 +254,7 @@ let searchArbreDejaVus (x: bool list) (a: arbreDejaVus) : decisionTree option =
     |x::xs,Node2(n,g,d) -> if x then aux d xs else aux g xs
   in aux a x
 ;;
-
-(*
+  (*
 Q 2 ) 
   Adapter l’algorithme élémentaire pour utiliser l’arbre de recherche ArbreDejaVus
 au lieu de la ListeDejaVus.*)
@@ -274,40 +272,30 @@ au lieu de la ListeDejaVus.*)
   pointeur vers le nœud correspondant au chemin ;
   -Sinon ajouter le nœud N dans l’arbreDejaVus ; 
 *)
-
-let arbreDejaVus = ref Empty;;
-
-let reset_arbreDejaVus () : unit =
-  arbreDejaVus := Empty
-;;
-let compressionParArbre (decTree: decisionTree)  : decisionTree =
-  reset_arbreDejaVus ();
-  let rec compressionAux (decTree: decisionTree) : decisionTree =
-    let boolList = liste_feuilles decTree in
+let compressionParArbre (decTree : decisionTree) : decisionTree =
+  let a = ref Empty in
+  let rec loop (decTree: decisionTree)  : decisionTree =
+    let feuilles = liste_feuilles decTree in
     match decTree with
-    | Empty -> Empty
-    | Leaf b -> (
-      match searchArbreDejaVus boolList !arbreDejaVus with
-      | Some t -> t
-      | None ->
-        let comp = Leaf b in
-        arbreDejaVus := insertArbreDejaVus !arbreDejaVus comp boolList;
-        comp
-      )
-    | Node (a, t1, t2) ->
-      match searchArbreDejaVus boolList !arbreDejaVus with
-      | Some t -> t
-      | None ->
-        let feuillesT2 = liste_feuilles t2 in
-        if allInListFalse feuillesT2 then
-          let compressedT1 = compressionAux t1 in
-          compressedT1
-        else
-          let compressedT1 = compressionAux t1 in
-          let compressedT2 = compressionAux t2 in
-          let comp = Node (a, compressedT1, compressedT2) in 
-          arbreDejaVus := insertArbreDejaVus !arbreDejaVus comp boolList;
-          comp
-  in
-  compressionAux decTree
+    |Empty -> Empty
+    |Leaf b -> ( 
+      match searchArbreDejaVus feuilles !a with
+        |Some t -> t
+        |None -> let compressed = Leaf(b) in
+          a := insertArbreDejaVus !a compressed feuilles ;
+          compressed
+        )
+    |Node(n,g,d) ->( 
+      match searchArbreDejaVus feuilles !a with
+        |Some t -> t
+        |None -> 
+          if allInListFalse (liste_feuilles d) then loop g 
+          else 
+            let compressedG = loop g in
+            let compressedD = loop d in
+            let compressed = Node(n,compressedG,compressedD ) in
+            a := insertArbreDejaVus !a compressed feuilles ;
+            compressed
+        )
+  in loop decTree 
 ;;

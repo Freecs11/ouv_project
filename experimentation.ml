@@ -13,7 +13,7 @@ let rec sizeOfTree (t : decisionTree) : int =
 
 (* on va generer des arbres de decision aleatoirement de taille 0 juqu'à 154631 qui est la taille maximale que mon algorithme peut supporter , sinon il y aura un stack overflow *) 
 let rec generateRandomDecisionTree (size : int) : decisionTree =
-  let max_size = 153000 in
+  let max_size = 150000 in
   let size = min size max_size in
   let k = genAlea size in
   let decp = decomposition k in
@@ -56,10 +56,10 @@ let timeit f =
 (* genrattion of the experimental data *)
 let generateExperimentalData () =
   let data = ref [] in
-  let max_size = 150000 in
-  let step = 1800 in  (* Specify your desired step size here *)
-  let rec generate_data size =
-    if size <= max_size then (
+  let max_size = 100000 in
+  let step = 1000 in  (* Specify your desired step size here *)
+  for i = 1 to 40 do
+    let size = i * step in
       let before_gen_memory = measure_memory_usage () in
       let (random_tree,gen_time) = timeit (fun () -> generateRandomDecisionTree size) in
       let zdd_size = sizeOfTree random_tree in 
@@ -75,10 +75,7 @@ let generateExperimentalData () =
 
       let row =  (size,zdd_size, gen_time, gen_memory, comp_time, comp_memory, compression_rate , comp_timeParArbe , compression_rateParArbe , arbre_compression_memory) in
       data :=  row :: !data;
-      generate_data (size + step)
-    )
-  in
-  generate_data 100;
+  done;
   List.rev !data
 ;;
 
@@ -97,20 +94,23 @@ saveExperimentalData data "experimental_data.csv";;
 
 
 
-
-(* let generateDataforN () =
+(* 
+let generateDataforN () =
   let data = ref [] in
   let fixed_size = 32768 in
   let max_size = 150000 in
-  let step = 500 in
-  for size = 100 to max_size do
+  let step = 1000 in
+  let rec generate_data size =
+    if size <= max_size then (
       let random_tree =  generateRandomDecisionTree fixed_size in
       let treesize = sizeOfTree random_tree in 
       let compressionParArbe  = compressionParArbre random_tree in
       let zdd_size = sizeOfTree compressionParArbe in 
       let row =  (size,treesize,zdd_size) in
       data :=  row :: !data;
-  done;
+      generate_data (size + step)
+    )  in
+  generate_data 100;
   List.rev !data
 ;;
 let saveExperimentalDatas data filename =
@@ -124,23 +124,23 @@ let saveExperimentalDatas data filename =
   ;;
 
 let data = generateDataforN () in
-saveExperimentalDatas data "experimental_data_fixedN.csv";;
-
+saveExperimentalDatas data "experimental_data_fixedN.csv";; *)
+(* 
 let generateDataforRate () =
   let data = ref [] in
-  let max_size = 150000 in
-  let step = 2000 in
-  let rec generate_data size =
-    if size <= max_size then (
-      let random_tree =  generateRandomDecisionTree size in
-      let treesize = sizeOfTree random_tree in 
-      let compression_rate = calculateCompressionRate random_tree in
-      let compression_rateParArbe = calculateCompressionRateParArbre random_tree in
-      let row =  (size,treesize,compression_rate,compression_rateParArbe) in
-      data :=  row :: !data;
-      generate_data (size + step)
-    )  in
-  generate_data 100;
+  let max_size = 100000 in
+  let step = 1000 in
+  for i = 50 to 90 do 
+    let f = i * step in
+    let random_tree = generateRandomDecisionTree f in
+    let treesize = sizeOfTree random_tree in
+    let compressionliste = compressionParListe random_tree {l=[]} in
+    let compression_rate = 1.0 -. (float_of_int (sizeOfTree compressionliste)) /. (float_of_int treesize) in
+    let compressionarbre = compressionParArbre random_tree in
+    let compression_rateParArbe = 1.0 -. (float_of_int (sizeOfTree compressionarbre)) /. (float_of_int treesize) in
+    let row = (f, treesize, compression_rate, compression_rateParArbe) in
+    data := row :: !data;
+  done;
   List.rev !data
 ;;
 
@@ -152,7 +152,7 @@ let saveExperimentalDatass data filename =
       Printf.fprintf oc "%d, %d, %f, %f\n" size treesize compression_rate compression_rateParArbe
     ) data;
   close_out oc
-  ;; *)
+  ;; 
 
-(* let data = generateDataforRate () in
+ let data = generateDataforRate () in
 saveExperimentalDatass data "experimental_data_rate.csv";; *)
