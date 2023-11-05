@@ -93,26 +93,6 @@ let saveExperimentalData data filename =
 let data = generateExperimentalData () in
 saveExperimentalData data "experimental_data.csv";; 
 
-(* test
-let gn = genAlea 60000;;
-let  k = cons_arbre (transformListBoolEquilibre (decomposition gn));;
-let zdd_size = sizeOfTree k;;
-(* let compressionliste = compressionParListe k {l=[]};;
-let compression_rate =  1.0 -. (float_of_int (sizeOfTree compressionliste)) /. (float_of_int zdd_size);; *)
-
-print_string "zdd_size : ";;
-print_int zdd_size;;
-print_string "\n";;
-(* print_string "compression_rate : ";;
-print_float compression_rate;;
-print_string "\n";; *)
-let compressionarbre = compressionParArbre k;;
-let compression_rateParArbe = 1.0 -. (float_of_int (sizeOfTree compressionarbre)) /. (float_of_int zdd_size);;
-print_string "compression_rateParArbe : ";;
-print_float compression_rateParArbe;;
-print_string "\n";; *)
-
-
 
 
 (* 
