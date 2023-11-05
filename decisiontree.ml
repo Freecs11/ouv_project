@@ -283,8 +283,7 @@ let reset_arbreDejaVus () : unit =
 let compressionParArbre (decTree: decisionTree)  : decisionTree =
   reset_arbreDejaVus ();
   let rec compressionAux (decTree: decisionTree) : decisionTree =
-    let calculatedList = liste_feuilles decTree in
-    let boolList = calculatedList in  (* Use the bool list directly from liste_feuilles *)
+    let boolList = liste_feuilles decTree in
     match decTree with
     | Empty -> Empty
     | Leaf b -> (
