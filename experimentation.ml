@@ -56,12 +56,12 @@ let timeit f =
 (* genrattion of the experimental data *)
 let generateExperimentalData () =
   let data = ref [] in
-  let max_size = 100000 in
+  let max_size = 60000 in
   let step = 1000 in  (* Specify your desired step size here *)
-  for i = 1 to 40 do
-    let size = i * step in
+  let curr = ref 10 in
+  while !curr <= max_size do
       let before_gen_memory = measure_memory_usage () in
-      let (random_tree,gen_time) = timeit (fun () -> generateRandomDecisionTree size) in
+      let (random_tree,gen_time) = timeit (fun () -> generateRandomDecisionTree !curr) in
       let zdd_size = sizeOfTree random_tree in 
       let after_gen_memory = measure_memory_usage () in
       let gen_memory = after_gen_memory -. before_gen_memory in
@@ -73,8 +73,9 @@ let generateExperimentalData () =
       let arbre_after_compression_memory = measure_memory_usage () in
       let arbre_compression_memory = arbre_after_compression_memory -. after_comp_memory in
 
-      let row =  (size,zdd_size, gen_time, gen_memory, comp_time, comp_memory, compression_rate , comp_timeParArbe , compression_rateParArbe , arbre_compression_memory) in
+      let row =  (!curr,zdd_size, gen_time, gen_memory, comp_time, comp_memory, compression_rate , comp_timeParArbe , compression_rateParArbe , arbre_compression_memory) in
       data :=  row :: !data;
+      curr := !curr + step
   done;
   List.rev !data
 ;;
@@ -91,6 +92,26 @@ let saveExperimentalData data filename =
 
 let data = generateExperimentalData () in
 saveExperimentalData data "experimental_data.csv";; 
+
+(* test
+let gn = genAlea 60000;;
+let  k = cons_arbre (transformListBoolEquilibre (decomposition gn));;
+let zdd_size = sizeOfTree k;;
+(* let compressionliste = compressionParListe k {l=[]};;
+let compression_rate =  1.0 -. (float_of_int (sizeOfTree compressionliste)) /. (float_of_int zdd_size);; *)
+
+print_string "zdd_size : ";;
+print_int zdd_size;;
+print_string "\n";;
+(* print_string "compression_rate : ";;
+print_float compression_rate;;
+print_string "\n";; *)
+let compressionarbre = compressionParArbre k;;
+let compression_rateParArbe = 1.0 -. (float_of_int (sizeOfTree compressionarbre)) /. (float_of_int zdd_size);;
+print_string "compression_rateParArbe : ";;
+print_float compression_rateParArbe;;
+print_string "\n";; *)
+
 
 
 
