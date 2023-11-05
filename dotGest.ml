@@ -87,7 +87,7 @@ let kd = cons_arbre k;;
 generate_dot_file kd "testsimple.dot";;    
 let ku = compressionParListe kd {l=[]};;
 generate_dot_file ku "testcompressedListe.dot";;
-let ks = compressionParArbre kd;;
+let ks = compressionParArbre kd ;;
 generate_dot_file ks "testcompressedArbre.dot";;
 
 
@@ -97,3 +97,28 @@ let kd = transformListBoolEquilibre kd;;
 let kd = cons_arbre kd;;
 let ku = compressionParListe kd {l=[]};;
 generate_dot_file ku "testcompressedArbre2.dot";;
+let kd = compressionParArbre kd ;;
+generate_dot_file kd "testcompressedArbre3.dot";;
+
+
+let k = genAlea 1000;;
+let kd = decomposition k;;
+let kd = transformListBoolEquilibre kd;;
+let kd = cons_arbre kd;;
+let rec sizeOfTree (t : decisionTree) : int =
+  match t with
+  | Empty -> 0
+  | Leaf b -> 1
+  | Node (n, t1, t2) -> 1 + sizeOfTree t1 + sizeOfTree t2
+;;
+
+let kr = compressionParArbre kd ;;
+print_string " length : ";;
+print_int (sizeOfTree kr);;
+print_string "\n";;
+generate_dot_file kr "testcompressedArbre4.dot";;
+let ku = compressionParListe kd {l=[]};;
+print_string " length : ";;
+print_int (sizeOfTree ku);;
+print_string "\n";;
+generate_dot_file ku "testcompressedListe4.dot";;
