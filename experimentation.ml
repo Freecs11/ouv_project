@@ -11,7 +11,7 @@ let rec sizeOfTree (t : decisionTree) : int =
   | Node (n, t1, t2) -> 1 + sizeOfTree t1 + sizeOfTree t2
 ;;
 
-(* on va generer des arbres de decision aleatoirement de taille 0 juqu'à 154631 qui est la taille maximale que mon algorithme peut supporter , sinon il y aura un stack overflow *) 
+(* on va generer des arbres de decision aleatoirement de taille 1 juqu'à 154631 qui est la taille maximale que mon algorithme peut supporter , sinon il y aura un stack overflow *) 
 let rec generateRandomDecisionTree (size : int) : decisionTree =
   let max_size = 150000 in
   let size = min size max_size in
